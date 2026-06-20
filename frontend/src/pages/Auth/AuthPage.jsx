@@ -183,12 +183,12 @@ const AuthPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-100 px-4 py-12 sm:px-6 lg:px-8">
+    <div className="flex-1 flex items-center justify-center bg-slate-100 px-4 py-12 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-lg border border-slate-200">
         
         {/* Branding header */}
         <div className="text-center">
-          <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+          <h2 className="text-3xl font-extrabold text-blue-900 tracking-tight">
             Delhi CM Portal
           </h2>
           <p className="mt-2 text-sm text-slate-500">
@@ -202,7 +202,7 @@ const AuthPage = () => {
             onClick={() => isLogin || handleToggle()}
             className={`flex-1 py-3 text-sm font-semibold tracking-wide transition-colors duration-200 border-b-2 outline-none ${
               isLogin 
-                ? 'border-indigo-600 text-indigo-600' 
+                ? 'border-blue-600 text-blue-600' 
                 : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
@@ -212,7 +212,7 @@ const AuthPage = () => {
             onClick={() => !isLogin || handleToggle()}
             className={`flex-1 py-3 text-sm font-semibold tracking-wide transition-colors duration-200 border-b-2 outline-none ${
               !isLogin 
-                ? 'border-indigo-600 text-indigo-600' 
+                ? 'border-blue-600 text-blue-600' 
                 : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
@@ -245,7 +245,7 @@ const AuthPage = () => {
                 required
                 value={formData.name}
                 onChange={handleChange}
-                className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
           )}
@@ -259,7 +259,7 @@ const AuthPage = () => {
               required
               value={formData.email}
               onChange={handleChange}
-              className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
@@ -272,7 +272,7 @@ const AuthPage = () => {
               required
               value={formData.password}
               onChange={handleChange}
-              className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
@@ -290,13 +290,13 @@ const AuthPage = () => {
                   disabled={otpVerified}
                   value={formData.phone}
                   onChange={handleChange}
-                  className={`w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${otpVerified ? 'opacity-60 cursor-not-allowed' : ''}`}
+                  className={`w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500 ${otpVerified ? 'opacity-60 cursor-not-allowed' : ''}`}
                 />
                 {!otpVerified && (
                   <button
                     type="button"
                     onClick={handleSendOtp}
-                    className="whitespace-nowrap px-4 py-2 bg-indigo-100 text-indigo-700 font-medium rounded-lg hover:bg-indigo-200 transition-colors"
+                    className="whitespace-nowrap px-4 py-2 bg-blue-100 text-blue-700 font-medium rounded-lg hover:bg-blue-200 transition-colors"
                   >
                     {otpSent ? 'Resend OTP' : 'Send OTP'}
                   </button>
@@ -312,7 +312,7 @@ const AuthPage = () => {
 
           {/* OTP Input Field */}
           {!isLogin && otpSent && !otpVerified && (
-            <div className="animate-fadeIn p-4 border border-indigo-100 rounded-lg bg-indigo-50/50">
+            <div className="animate-fadeIn p-4 border border-blue-100 rounded-lg bg-blue-50/50">
               <label className="block text-sm font-medium text-slate-700 mb-1">Enter OTP</label>
               <div className="flex gap-2">
                 <input
@@ -321,12 +321,12 @@ const AuthPage = () => {
                   placeholder="Enter OTP (e.g. 1234)"
                   value={otpInput}
                   onChange={(e) => setOtpInput(e.target.value.replace(/[^0-9]/g, '').slice(0, 6))}
-                  className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 <button
                   type="button"
                   onClick={handleVerifyOtp}
-                  className="whitespace-nowrap px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+                  className="whitespace-nowrap px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
                 >
                   Verify
                 </button>
@@ -342,7 +342,7 @@ const AuthPage = () => {
                 name="role"
                 value={formData.role}
                 onChange={handleChange}
-                className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="citizen">Citizen</option>
                 <option value="officer">Officer (Government Employee)</option>
@@ -362,7 +362,7 @@ const AuthPage = () => {
                 placeholder="e.g. PWD, Health"
                 value={formData.department}
                 onChange={handleChange}
-                className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
           )}
@@ -372,7 +372,7 @@ const AuthPage = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full p-3 font-semibold text-white bg-slate-900 rounded-lg hover:bg-slate-800 disabled:opacity-50 transition-colors"
+              className="w-full p-3 font-semibold text-white bg-blue-900 rounded-lg hover:bg-blue-800 disabled:opacity-50 transition-colors"
             >
               {loading ? 'Processing...' : (isLogin ? 'Log In' : 'Register')}
             </button>

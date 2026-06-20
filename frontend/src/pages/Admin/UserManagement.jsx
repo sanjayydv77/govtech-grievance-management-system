@@ -60,24 +60,24 @@ const AddUserModal = ({ onClose, onCreated }) => {
                         <div>
                             <label className="text-xs font-semibold text-slate-600 block mb-1.5">Full Name *</label>
                             <input name="name" value={form.name} onChange={handleChange} required placeholder="Full name"
-                                className="w-full border border-slate-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                                className="w-full border border-slate-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
                         </div>
                         <div>
                             <label className="text-xs font-semibold text-slate-600 block mb-1.5">Phone</label>
                             <input name="phone" value={form.phone} onChange={handleChange} placeholder="10-digit number"
-                                className="w-full border border-slate-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                                className="w-full border border-slate-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
                         </div>
                     </div>
                     <div>
                         <label className="text-xs font-semibold text-slate-600 block mb-1.5">Email *</label>
                         <input name="email" type="email" value={form.email} onChange={handleChange} required placeholder="user@delhi.gov.in"
-                            className="w-full border border-slate-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                            className="w-full border border-slate-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                         <div>
                             <label className="text-xs font-semibold text-slate-600 block mb-1.5">Role *</label>
                             <select name="role" value={form.role} onChange={handleChange}
-                                className="w-full border border-slate-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white">
+                                className="w-full border border-slate-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
                                 <option value="officer">Officer</option>
                                 <option value="admin">Admin</option>
                                 <option value="cm">CM</option>
@@ -87,7 +87,7 @@ const AddUserModal = ({ onClose, onCreated }) => {
                             <div>
                                 <label className="text-xs font-semibold text-slate-600 block mb-1.5">Department *</label>
                                 <select name="department" value={form.department} onChange={handleChange}
-                                    className="w-full border border-slate-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white">
+                                    className="w-full border border-slate-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
                                     <option value="">Select…</option>
                                     {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
                                 </select>
@@ -97,11 +97,11 @@ const AddUserModal = ({ onClose, onCreated }) => {
                     <div>
                         <label className="text-xs font-semibold text-slate-600 block mb-1.5">Password *</label>
                         <input name="password" type="password" value={form.password} onChange={handleChange} required placeholder="Min 6 characters"
-                            className="w-full border border-slate-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                            className="w-full border border-slate-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
                     </div>
                     <div className="flex gap-3 pt-1">
                         <button type="button" onClick={onClose} className="flex-1 border border-slate-300 text-slate-600 py-2.5 rounded-xl text-sm font-medium hover:bg-slate-50 transition-colors">Cancel</button>
-                        <button type="submit" disabled={loading} className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-xl text-sm font-semibold transition-colors disabled:opacity-60 shadow-sm shadow-indigo-200">
+                        <button type="submit" disabled={loading} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl text-sm font-semibold transition-colors disabled:opacity-60 shadow-sm shadow-blue-200">
                             {loading ? 'Creating…' : 'Create User'}
                         </button>
                     </div>
@@ -207,7 +207,7 @@ const UserManagement = () => {
                     <p className="text-slate-500 text-sm mt-0.5">{loading ? 'Loading…' : `${filteredUsers.length} of ${users.length} users`}</p>
                 </div>
                 <button onClick={() => setShowAddModal(true)}
-                    className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm shadow-indigo-200">
+                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm shadow-blue-200">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
                     Create Account
                 </button>
@@ -218,7 +218,7 @@ const UserManagement = () => {
                 {[
                     { label: 'Total Users', value: users.length, icon: '👥', bg: 'bg-slate-50' },
                     { label: 'Citizens', value: counts.Citizens, icon: '👤', bg: 'bg-blue-50' },
-                    { label: 'Officers', value: counts.Officers, icon: '👮', bg: 'bg-indigo-50' },
+                    { label: 'Officers', value: counts.Officers, icon: '👮', bg: 'bg-blue-50' },
                     { label: 'Admin/CM', value: counts.Admins, icon: '⚙', bg: 'bg-purple-50' },
                 ].map(c => (
                     <div key={c.label} className="bg-white border border-slate-200 rounded-2xl p-4 flex items-center gap-3 shadow-sm">
@@ -246,7 +246,7 @@ const UserManagement = () => {
                 <div className="relative">
                     <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                     <input type="text" placeholder="Search by name, email, phone…" value={search} onChange={e => setSearch(e.target.value)}
-                        className="w-full pl-10 pr-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50" />
+                        className="w-full pl-10 pr-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50" />
                 </div>
             </div>
 
@@ -254,7 +254,7 @@ const UserManagement = () => {
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                 {loading ? (
                     <div className="flex flex-col items-center justify-center h-48 gap-3 text-slate-400">
-                        <div className="w-9 h-9 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+                        <div className="w-9 h-9 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
                         <span className="text-sm font-medium">Loading users…</span>
                     </div>
                 ) : filteredUsers.length === 0 ? (
@@ -282,7 +282,7 @@ const UserManagement = () => {
                                     const canDelete = !isSelf && !isProtected;
 
                                     return (
-                                        <tr key={u._id} className={`hover:bg-slate-50/60 transition-colors ${isSelf ? 'bg-indigo-50/30' : ''}`}>
+                                        <tr key={u._id} className={`hover:bg-slate-50/60 transition-colors ${isSelf ? 'bg-blue-50/30' : ''}`}>
                                             <td className="px-5 py-4">
                                                 <div className="flex items-center gap-3">
                                                     <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0 ${
@@ -295,7 +295,7 @@ const UserManagement = () => {
                                                     </div>
                                                     <div className="min-w-0">
                                                         <p className="font-bold text-slate-800 truncate">
-                                                            {u.name} {isSelf && <span className="text-indigo-500 text-xs font-semibold">(You)</span>}
+                                                            {u.name} {isSelf && <span className="text-blue-500 text-xs font-semibold">(You)</span>}
                                                         </p>
                                                         <p className="text-xs text-slate-400 truncate">{u.email}</p>
                                                     </div>

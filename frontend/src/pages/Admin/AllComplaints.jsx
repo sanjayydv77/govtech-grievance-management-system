@@ -6,7 +6,7 @@ import TicketDetailsModal from '../../components/TicketDetailsModal';
 const STATUS_STYLES = {
     'Resolved': 'bg-emerald-100 text-emerald-700 border-emerald-200',
     'In Progress': 'bg-blue-100 text-blue-700 border-blue-200',
-    'Assigned': 'bg-indigo-100 text-indigo-700 border-indigo-200',
+    'Assigned': 'bg-blue-100 text-blue-700 border-blue-200',
     'Rejected': 'bg-red-100 text-red-700 border-red-200',
     'Pending': 'bg-amber-100 text-amber-700 border-amber-200',
 };
@@ -174,7 +174,7 @@ const AllComplaints = () => {
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
                         Refresh
                     </button>
-                    <button onClick={handleExport} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors shadow-sm shadow-indigo-200">
+                    <button onClick={handleExport} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors shadow-sm shadow-blue-200">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
                         Export CSV
                     </button>
@@ -187,20 +187,20 @@ const AllComplaints = () => {
                     <div className="relative flex-1 min-w-56">
                         <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                         <input type="text" placeholder="Search title, location, citizen, ID..." value={search} onChange={e => setSearch(e.target.value)}
-                            className="w-full pl-10 pr-3 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50" />
+                            className="w-full pl-10 pr-3 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50" />
                     </div>
                     <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
-                        className="border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50">
+                        className="border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50">
                         <option value="">All Statuses</option>
                         {['Pending','Assigned','In Progress','Resolved','Rejected'].map(s => <option key={s}>{s}</option>)}
                     </select>
                     <select value={deptFilter} onChange={e => setDeptFilter(e.target.value)}
-                        className="border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50">
+                        className="border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50">
                         <option value="">All Departments</option>
                         {departments.map(d => <option key={d}>{d}</option>)}
                     </select>
                     <select value={sortBy} onChange={e => setSortBy(e.target.value)}
-                        className="border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50">
+                        className="border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50">
                         <option value="newest">Newest First</option>
                         <option value="oldest">Oldest First</option>
                     </select>
@@ -214,9 +214,9 @@ const AllComplaints = () => {
                 {/* Active filter chips */}
                 {(statusFilter || deptFilter || search) && (
                     <div className="flex gap-2 mt-3 flex-wrap">
-                        {search && <span className="text-xs bg-indigo-100 text-indigo-700 px-2.5 py-1 rounded-full font-medium">Search: "{search}"</span>}
-                        {statusFilter && <span className="text-xs bg-indigo-100 text-indigo-700 px-2.5 py-1 rounded-full font-medium">Status: {statusFilter}</span>}
-                        {deptFilter && <span className="text-xs bg-indigo-100 text-indigo-700 px-2.5 py-1 rounded-full font-medium">Dept: {deptFilter}</span>}
+                        {search && <span className="text-xs bg-blue-100 text-blue-700 px-2.5 py-1 rounded-full font-medium">Search: "{search}"</span>}
+                        {statusFilter && <span className="text-xs bg-blue-100 text-blue-700 px-2.5 py-1 rounded-full font-medium">Status: {statusFilter}</span>}
+                        {deptFilter && <span className="text-xs bg-blue-100 text-blue-700 px-2.5 py-1 rounded-full font-medium">Dept: {deptFilter}</span>}
                     </div>
                 )}
             </div>
@@ -226,7 +226,7 @@ const AllComplaints = () => {
                 <div className="overflow-x-auto">
                     {loading ? (
                         <div className="flex flex-col items-center justify-center h-48 gap-3 text-slate-400">
-                            <div className="w-9 h-9 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+                            <div className="w-9 h-9 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
                             <span className="text-sm font-medium">Loading complaints...</span>
                         </div>
                     ) : paginated.length === 0 ? (
@@ -267,12 +267,12 @@ const AllComplaints = () => {
                                             {assigningId === ticket._id ? (
                                                 <div className="flex gap-1.5 items-center">
                                                     <select value={selectedOfficer} onChange={e => setSelectedOfficer(e.target.value)} autoFocus
-                                                        className="border border-slate-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white max-w-[140px]">
+                                                        className="border border-slate-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white max-w-[140px]">
                                                         <option value="">Select officer…</option>
                                                         {officers.map(o => <option key={o._id} value={o._id}>{o.name} ({o.department})</option>)}
                                                     </select>
                                                     <button onClick={() => handleAssign(ticket._id)} disabled={savingAssign || !selectedOfficer}
-                                                        className="bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold disabled:opacity-40 transition-colors">
+                                                        className="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold disabled:opacity-40 transition-colors">
                                                         {savingAssign ? '…' : '✓'}
                                                     </button>
                                                     <button onClick={() => { setAssigningId(null); setSelectedOfficer(''); }}
@@ -284,14 +284,14 @@ const AllComplaints = () => {
                                                     <span className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-lg">{ticket.assignedOfficerId.department}</span>
                                                     <div className="mt-1.5">
                                                         <button onClick={() => { setAssigningId(ticket._id); setSelectedOfficer(''); }}
-                                                            className="text-xs text-indigo-500 hover:text-indigo-700 underline underline-offset-2 mr-2">
+                                                            className="text-xs text-blue-500 hover:text-blue-700 underline underline-offset-2 mr-2">
                                                             Reassign
                                                         </button>
                                                     </div>
                                                 </div>
                                             ) : (
                                                 <button onClick={() => { setAssigningId(ticket._id); setSelectedOfficer(''); }}
-                                                    className="text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-600 font-semibold px-3 py-1.5 rounded-xl transition-colors">
+                                                    className="text-xs bg-blue-50 hover:bg-blue-100 text-blue-600 font-semibold px-3 py-1.5 rounded-xl transition-colors">
                                                     + Assign Officer
                                                 </button>
                                             )}
@@ -304,7 +304,7 @@ const AllComplaints = () => {
                                                     disabled={overridingId === ticket._id}
                                                     onChange={e => { if (e.target.value) { handleStatusOverride(ticket._id, e.target.value); e.target.value = ''; } }}
                                                     defaultValue=""
-                                                    className="text-xs border border-slate-200 rounded-lg px-2 py-1 text-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-400 cursor-pointer bg-white w-full disabled:opacity-50"
+                                                    className="text-xs border border-slate-200 rounded-lg px-2 py-1 text-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-400 cursor-pointer bg-white w-full disabled:opacity-50"
                                                 >
                                                     <option value="" disabled>{overridingId === ticket._id ? 'Saving…' : 'Admin override…'}</option>
                                                     {['Pending','Assigned','In Progress','Resolved','Rejected'].map(s => (
@@ -320,7 +320,7 @@ const AllComplaints = () => {
                                         {/* Actions */}
                                         <td className="px-5 py-4 text-right">
                                             <button onClick={() => setSelectedTicket(ticket)}
-                                                className="text-xs font-bold bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-700 px-3.5 py-2 rounded-xl transition-colors">
+                                                className="text-xs font-bold bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 px-3.5 py-2 rounded-xl transition-colors">
                                                 Details →
                                             </button>
                                         </td>
@@ -345,7 +345,7 @@ const AllComplaints = () => {
                                     <span key={`ellipsis-${i}`} className="px-2 text-slate-400 text-xs">…</span>
                                 ) : (
                                     <button key={p} onClick={() => setPage(p)}
-                                        className={`w-8 h-8 text-xs rounded-lg transition-colors font-medium ${page === p ? 'bg-indigo-600 text-white shadow-sm' : 'border border-slate-200 hover:bg-slate-100 text-slate-600'}`}>
+                                        className={`w-8 h-8 text-xs rounded-lg transition-colors font-medium ${page === p ? 'bg-blue-600 text-white shadow-sm' : 'border border-slate-200 hover:bg-slate-100 text-slate-600'}`}>
                                         {p}
                                     </button>
                                 )

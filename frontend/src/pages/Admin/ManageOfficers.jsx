@@ -5,7 +5,7 @@ import { fetchOfficers, fetchAllTickets, assignOfficerToTicket, dischargeOfficer
 const StatusBadge = ({ status }) => {
     const s = {
         'Resolved': 'bg-emerald-100 text-emerald-700', 'In Progress': 'bg-blue-100 text-blue-700',
-        'Assigned': 'bg-indigo-100 text-indigo-700', 'Rejected': 'bg-red-100 text-red-700',
+        'Assigned': 'bg-blue-100 text-blue-700', 'Rejected': 'bg-red-100 text-red-700',
         'Pending': 'bg-amber-100 text-amber-700',
     };
     return <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap ${s[status] || 'bg-slate-100 text-slate-600'}`}>{status}</span>;
@@ -51,23 +51,23 @@ const AddOfficerModal = ({ onClose, onCreated }) => {
                         <div>
                             <label className="text-xs font-semibold text-slate-600 block mb-1.5">Full Name *</label>
                             <input name="name" value={form.name} onChange={handleChange} required placeholder="Officer Name"
-                                className="w-full border border-slate-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                                className="w-full border border-slate-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
                         </div>
                         <div>
                             <label className="text-xs font-semibold text-slate-600 block mb-1.5">Phone</label>
                             <input name="phone" value={form.phone} onChange={handleChange} placeholder="10-digit number"
-                                className="w-full border border-slate-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                                className="w-full border border-slate-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
                         </div>
                     </div>
                     <div>
                         <label className="text-xs font-semibold text-slate-600 block mb-1.5">Official Email *</label>
                         <input name="email" type="email" value={form.email} onChange={handleChange} required placeholder="officer@delhi.gov.in"
-                            className="w-full border border-slate-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                            className="w-full border border-slate-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
                     </div>
                     <div>
                         <label className="text-xs font-semibold text-slate-600 block mb-1.5">Department *</label>
                         <select name="department" value={form.department} onChange={handleChange} required
-                            className="w-full border border-slate-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white">
+                            className="w-full border border-slate-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
                             <option value="">Select Department</option>
                             {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
                         </select>
@@ -75,12 +75,12 @@ const AddOfficerModal = ({ onClose, onCreated }) => {
                     <div>
                         <label className="text-xs font-semibold text-slate-600 block mb-1.5">Temporary Password *</label>
                         <input name="password" type="password" value={form.password} onChange={handleChange} required placeholder="Min 6 characters"
-                            className="w-full border border-slate-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                            className="w-full border border-slate-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
                         <p className="text-xs text-slate-400 mt-1.5">Officer should change this after first login.</p>
                     </div>
                     <div className="flex gap-3 pt-2">
                         <button type="button" onClick={onClose} className="flex-1 border border-slate-300 text-slate-600 py-2.5 rounded-xl text-sm font-medium hover:bg-slate-50 transition-colors">Cancel</button>
-                        <button type="submit" disabled={loading} className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-xl text-sm font-semibold transition-colors disabled:opacity-60 shadow-sm shadow-indigo-200">
+                        <button type="submit" disabled={loading} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl text-sm font-semibold transition-colors disabled:opacity-60 shadow-sm shadow-blue-200">
                             {loading ? 'Creating…' : 'Create Officer'}
                         </button>
                     </div>
@@ -135,7 +135,7 @@ const OfficerModal = ({ officerData, allTickets, allOfficers, onClose, onTickets
                 {/* Header */}
                 <div className="px-6 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between flex-shrink-0">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-700 text-white font-bold text-base flex items-center justify-center shadow-md">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 text-white font-bold text-base flex items-center justify-center shadow-md">
                             {officer.name.charAt(0).toUpperCase()}
                         </div>
                         <div>
@@ -179,14 +179,14 @@ const OfficerModal = ({ officerData, allTickets, allOfficers, onClose, onTickets
                                             {reassigningId === ticket._id ? (
                                                 <div className="flex gap-1.5 items-center">
                                                     <select value={newOfficerId} onChange={e => setNewOfficerId(e.target.value)} autoFocus
-                                                        className="border border-slate-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 max-w-[150px]">
+                                                        className="border border-slate-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 max-w-[150px]">
                                                         <option value="">Select officer…</option>
                                                         {allOfficers.filter(o => o._id !== officer._id).map(o => (
                                                             <option key={o._id} value={o._id}>{o.name} ({o.department})</option>
                                                         ))}
                                                     </select>
                                                     <button onClick={() => handleReassign(ticket._id)} disabled={saving || !newOfficerId}
-                                                        className="bg-indigo-600 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold disabled:opacity-40">
+                                                        className="bg-blue-600 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold disabled:opacity-40">
                                                         {saving ? '…' : '✓'}
                                                     </button>
                                                     <button onClick={() => setReassigningId(null)} className="text-slate-400 hover:text-red-500 text-xs px-1">✕</button>
@@ -194,7 +194,7 @@ const OfficerModal = ({ officerData, allTickets, allOfficers, onClose, onTickets
                                             ) : (
                                                 <div className="flex gap-1.5">
                                                     <button onClick={() => { setReassigningId(ticket._id); setNewOfficerId(''); }}
-                                                        className="text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-600 font-semibold px-3 py-1.5 rounded-lg transition-colors">
+                                                        className="text-xs bg-blue-50 hover:bg-blue-100 text-blue-600 font-semibold px-3 py-1.5 rounded-lg transition-colors">
                                                         Reassign
                                                     </button>
                                                     <button onClick={() => handleDischarge(ticket._id)} disabled={saving}
@@ -291,7 +291,7 @@ const ManageOfficers = () => {
                     </p>
                 </div>
                 <button onClick={() => setShowAddModal(true)}
-                    className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm shadow-indigo-200">
+                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm shadow-blue-200">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
                     Add Officer
                 </button>
@@ -300,7 +300,7 @@ const ManageOfficers = () => {
             {/* ── Summary Cards ── */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center text-2xl">👮</div>
+                    <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-2xl">👮</div>
                     <div><p className="text-xs text-slate-500 font-semibold uppercase tracking-wide">Total Officers</p><p className="text-3xl font-bold text-slate-800">{loading ? '—' : officers.length}</p></div>
                 </div>
                 <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex items-center gap-4">
@@ -325,10 +325,10 @@ const ManageOfficers = () => {
                 <div className="relative flex-1 min-w-48">
                     <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                     <input type="text" placeholder="Search officers by name, email, department…" value={search} onChange={e => setSearch(e.target.value)}
-                        className="w-full pl-10 pr-3 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50" />
+                        className="w-full pl-10 pr-3 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50" />
                 </div>
                 <select value={deptFilter} onChange={e => setDeptFilter(e.target.value)}
-                    className="border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50">
+                    className="border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50">
                     <option value="">All Departments</option>
                     {allDepts.map(d => <option key={d}>{d}</option>)}
                 </select>
@@ -348,7 +348,7 @@ const ManageOfficers = () => {
                 <div className="flex flex-col items-center py-20 text-slate-300 gap-2">
                     <span className="text-6xl">👮</span>
                     <p className="text-sm font-semibold text-slate-400">{search || deptFilter ? 'No officers match your search' : 'No officers registered yet'}</p>
-                    <button onClick={() => setShowAddModal(true)} className="mt-2 text-sm text-indigo-600 hover:text-indigo-800 font-semibold underline underline-offset-2">Add your first officer →</button>
+                    <button onClick={() => setShowAddModal(true)} className="mt-2 text-sm text-blue-600 hover:text-blue-800 font-semibold underline underline-offset-2">Add your first officer →</button>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -356,10 +356,10 @@ const ManageOfficers = () => {
                         const stats = officerStats[officer._id] || { total: 0, resolved: 0, inProgress: 0 };
                         const rate = stats.total > 0 ? Math.round((stats.resolved / stats.total) * 100) : 0;
                         return (
-                            <div key={officer._id} className="bg-white rounded-2xl border border-slate-200 p-5 hover:shadow-md hover:border-indigo-200 transition-all duration-200 flex flex-col group">
+                            <div key={officer._id} className="bg-white rounded-2xl border border-slate-200 p-5 hover:shadow-md hover:border-blue-200 transition-all duration-200 flex flex-col group">
                                 {/* Officer Header */}
                                 <div className="flex items-start gap-3 mb-4">
-                                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-100 to-indigo-200 text-indigo-700 font-bold text-lg flex items-center justify-center flex-shrink-0 group-hover:from-indigo-500 group-hover:to-indigo-700 group-hover:text-white transition-all duration-200">
+                                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-100 to-blue-200 text-blue-700 font-bold text-lg flex items-center justify-center flex-shrink-0 group-hover:from-blue-500 group-hover:to-blue-700 group-hover:text-white transition-all duration-200">
                                         {officer.name.charAt(0).toUpperCase()}
                                     </div>
                                     <div className="flex-1 min-w-0">
@@ -399,7 +399,7 @@ const ManageOfficers = () => {
 
                                 {/* Action Button */}
                                 <button onClick={() => openOfficerModal(officer)}
-                                    className="w-full text-sm font-semibold text-indigo-600 hover:text-white bg-indigo-50 hover:bg-indigo-600 border border-indigo-200 hover:border-indigo-600 py-2.5 rounded-xl transition-all duration-200 mt-auto">
+                                    className="w-full text-sm font-semibold text-blue-600 hover:text-white bg-blue-50 hover:bg-blue-600 border border-blue-200 hover:border-blue-600 py-2.5 rounded-xl transition-all duration-200 mt-auto">
                                     View Complaints ({stats.total})
                                 </button>
                             </div>

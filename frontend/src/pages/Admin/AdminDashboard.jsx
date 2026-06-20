@@ -6,7 +6,7 @@ import { fetchStats, fetchAllTickets, fetchOfficers } from '../../services/api';
 const StatusBadge = ({ status }) => {
     const s = {
         'Resolved': 'bg-emerald-100 text-emerald-700', 'In Progress': 'bg-blue-100 text-blue-700',
-        'Assigned': 'bg-indigo-100 text-indigo-700', 'Rejected': 'bg-red-100 text-red-700',
+        'Assigned': 'bg-blue-100 text-blue-700', 'Rejected': 'bg-red-100 text-red-700',
         'Pending': 'bg-amber-100 text-amber-700',
     };
     return <span className={`px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap ${s[status] || 'bg-slate-100 text-slate-600'}`}>{status}</span>;
@@ -17,7 +17,7 @@ const StatCard = ({ title, value, icon, bg, textColor, loading, onClick }) => (
         <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl flex-shrink-0 ${bg}`}>{icon}</div>
         <div className="min-w-0">
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider truncate">{title}</p>
-            <p className={`text-3xl font-bold mt-0.5 ${textColor || 'text-slate-800'}`}>
+            <p className={`text-3xl font-bold mt-0.5 ${textColor || 'text-blue-900'}`}>
                 {loading ? <span className="inline-block w-10 h-7 bg-slate-200 rounded animate-pulse" /> : (value ?? 0)}
             </p>
         </div>
@@ -75,11 +75,11 @@ const AdminDashboard = () => {
             {/* ── Page Header ── */}
             <div className="flex items-center justify-between flex-wrap gap-3">
                 <div>
-                    <h2 className="text-2xl font-bold text-slate-800">Good {new Date().getHours() < 12 ? 'Morning' : new Date().getHours() < 17 ? 'Afternoon' : 'Evening'} 👋</h2>
+                    <h2 className="text-2xl font-bold text-blue-900">Good {new Date().getHours() < 12 ? 'Morning' : new Date().getHours() < 17 ? 'Afternoon' : 'Evening'} 👋</h2>
                     <p className="text-slate-500 text-sm mt-0.5">Here's what's happening on the Delhi CM Portal today.</p>
                 </div>
                 <div className="flex gap-2">
-                    <button onClick={() => navigate('/dashboard/admin/complaints')} className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors shadow-sm shadow-indigo-200">
+                    <button onClick={() => navigate('/dashboard/admin/complaints')} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors shadow-sm shadow-blue-200">
                         Manage Complaints →
                     </button>
                 </div>
@@ -89,7 +89,7 @@ const AdminDashboard = () => {
             <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-4">
                 <StatCard title="Total" value={stats?.total} icon="📋" bg="bg-slate-100" loading={loading} onClick={() => navigate('/dashboard/admin/complaints')} />
                 <StatCard title="Pending" value={stats?.byStatus?.pending} icon="⏳" bg="bg-amber-50" textColor="text-amber-700" loading={loading} onClick={() => navigate('/dashboard/admin/complaints?status=Pending')} />
-                <StatCard title="Assigned" value={stats?.byStatus?.assigned} icon="📌" bg="bg-indigo-50" textColor="text-indigo-700" loading={loading} />
+                <StatCard title="Assigned" value={stats?.byStatus?.assigned} icon="📌" bg="bg-blue-50" textColor="text-blue-700" loading={loading} />
                 <StatCard title="In Progress" value={stats?.byStatus?.inProgress} icon="🔧" bg="bg-blue-50" textColor="text-blue-700" loading={loading} />
                 <StatCard title="Resolved" value={stats?.byStatus?.resolved} icon="✅" bg="bg-emerald-50" textColor="text-emerald-700" loading={loading} />
                 <StatCard title="Rejected" value={stats?.byStatus?.rejected} icon="❌" bg="bg-red-50" textColor="text-red-600" loading={loading} />
@@ -100,7 +100,7 @@ const AdminDashboard = () => {
 
                 {/* Department Breakdown */}
                 <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-                    <h3 className="text-base font-bold text-slate-800 mb-5">Department Breakdown</h3>
+                    <h3 className="text-base font-bold text-blue-900 mb-5">Department Breakdown</h3>
                     {loading ? (
                         <div className="space-y-4">{[1,2,3,4].map(i => (<div key={i}><div className="flex justify-between mb-1.5"><Skeleton h="h-3.5" w="w-24" /><Skeleton h="h-3.5" w="w-8" /></div><Skeleton h="h-2" /></div>))}</div>
                     ) : stats?.byDepartment?.length ? (
@@ -109,11 +109,11 @@ const AdminDashboard = () => {
                                 <div key={d._id}>
                                     <div className="flex justify-between items-center mb-1.5">
                                         <span className="text-sm font-semibold text-slate-700">{d._id || 'Unknown'}</span>
-                                        <span className="text-sm font-bold text-slate-800 tabular-nums">{d.count} <span className="text-xs text-slate-400 font-normal">complaints</span></span>
+                                        <span className="text-sm font-bold text-blue-900 tabular-nums">{d.count} <span className="text-xs text-slate-400 font-normal">complaints</span></span>
                                     </div>
                                     <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
                                         <div
-                                            className="h-2.5 rounded-full bg-gradient-to-r from-indigo-500 to-indigo-400 transition-all duration-700 ease-out"
+                                            className="h-2.5 rounded-full bg-gradient-to-r from-blue-500 to-blue-400 transition-all duration-700 ease-out"
                                             style={{ width: `${Math.round((d.count / maxDeptCount) * 100)}%` }}
                                         />
                                     </div>
@@ -131,8 +131,8 @@ const AdminDashboard = () => {
                 {/* Recent Activity Feed */}
                 <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
                     <div className="flex items-center justify-between mb-5">
-                        <h3 className="text-base font-bold text-slate-800">Recent Activity</h3>
-                        <button onClick={() => navigate('/dashboard/admin/complaints')} className="text-xs text-indigo-600 hover:text-indigo-800 font-semibold">
+                        <h3 className="text-base font-bold text-blue-900">Recent Activity</h3>
+                        <button onClick={() => navigate('/dashboard/admin/complaints')} className="text-xs text-blue-600 hover:text-blue-800 font-semibold">
                             View All →
                         </button>
                     </div>
@@ -142,9 +142,9 @@ const AdminDashboard = () => {
                         <div className="space-y-1">
                             {recentTickets.map(t => (
                                 <div key={t._id} className="flex items-center gap-3 py-2.5 border-b border-slate-50 last:border-0 group">
-                                    <div className="w-2 h-2 rounded-full flex-shrink-0 bg-indigo-400" />
+                                    <div className="w-2 h-2 rounded-full flex-shrink-0 bg-blue-400" />
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-semibold text-slate-800 truncate">{t.title}</p>
+                                        <p className="text-sm font-semibold text-blue-900 truncate">{t.title}</p>
                                         <p className="text-xs text-slate-400 truncate">{t.location} · {t.department || 'Unclassified'} · {new Date(t.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</p>
                                     </div>
                                     <StatusBadge status={t.status} />
@@ -164,8 +164,8 @@ const AdminDashboard = () => {
             {!loading && officerPerf.length > 0 && (
                 <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
                     <div className="flex items-center justify-between mb-5">
-                        <h3 className="text-base font-bold text-slate-800">Officer Performance</h3>
-                        <button onClick={() => navigate('/dashboard/admin/officers')} className="text-xs text-indigo-600 hover:text-indigo-800 font-semibold">
+                        <h3 className="text-base font-bold text-blue-900">Officer Performance</h3>
+                        <button onClick={() => navigate('/dashboard/admin/officers')} className="text-xs text-blue-600 hover:text-blue-800 font-semibold">
                             Manage Officers →
                         </button>
                     </div>
@@ -185,16 +185,16 @@ const AdminDashboard = () => {
                                         <tr key={officer._id} className="hover:bg-slate-50/50 transition-colors">
                                             <td className="py-3.5 pr-4">
                                                 <div className="flex items-center gap-2.5">
-                                                    <div className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 font-bold text-sm flex items-center justify-center flex-shrink-0">
+                                                    <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 font-bold text-sm flex items-center justify-center flex-shrink-0">
                                                         {officer.name.charAt(0).toUpperCase()}
                                                     </div>
-                                                    <span className="font-semibold text-slate-800 truncate">{officer.name}</span>
+                                                    <span className="font-semibold text-blue-900 truncate">{officer.name}</span>
                                                 </div>
                                             </td>
                                             <td className="py-3.5 pr-4">
                                                 <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-lg text-xs font-medium">{officer.department || '—'}</span>
                                             </td>
-                                            <td className="py-3.5 pr-4 font-bold text-slate-800 tabular-nums">{total}</td>
+                                            <td className="py-3.5 pr-4 font-bold text-blue-900 tabular-nums">{total}</td>
                                             <td className="py-3.5 pr-4">
                                                 <span className="text-blue-600 font-bold tabular-nums">{inProgress}</span>
                                             </td>
@@ -220,10 +220,10 @@ const AdminDashboard = () => {
 
             {/* ── Bottom Summary Row ── */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="bg-gradient-to-br from-indigo-600 to-indigo-700 rounded-2xl p-5 text-white shadow-lg shadow-indigo-200">
-                    <p className="text-xs font-semibold text-indigo-200 uppercase tracking-wider mb-1">Active Officers</p>
+                <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl p-5 text-white shadow-lg shadow-blue-200">
+                    <p className="text-xs font-semibold text-blue-200 uppercase tracking-wider mb-1">Active Officers</p>
                     <p className="text-4xl font-bold">{loading ? '—' : officers.length}</p>
-                    <button onClick={() => navigate('/dashboard/admin/officers')} className="mt-3 text-xs text-indigo-200 hover:text-white font-medium">Manage →</button>
+                    <button onClick={() => navigate('/dashboard/admin/officers')} className="mt-3 text-xs text-blue-200 hover:text-white font-medium">Manage →</button>
                 </div>
                 <div className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl p-5 text-white shadow-lg shadow-amber-200">
                     <p className="text-xs font-semibold text-amber-100 uppercase tracking-wider mb-1">Needs Attention</p>

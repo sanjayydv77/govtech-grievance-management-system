@@ -13,9 +13,12 @@ import AllComplaints from './pages/Admin/AllComplaints';
 import ManageOfficers from './pages/Admin/ManageOfficers';
 import UserManagement from './pages/Admin/UserManagement';
 
+// ── Shared ────────────────────────────────────────────────────
+import GovBanner from './components/GovBanner';
+
 // ── Placeholders (team members' dashboards — replace when merged) ─
 const PlaceholderPage = ({ emoji, title, desc }) => (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
+    <div className="flex-1 bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
         <div className="bg-white p-10 rounded-2xl shadow-lg border border-slate-200 text-center max-w-md">
             <div className="text-6xl mb-5">{emoji}</div>
             <h1 className="text-2xl font-bold text-slate-800 mb-2">{title}</h1>
@@ -34,8 +37,11 @@ function App() {
     return (
         <AuthProvider>
             <BrowserRouter>
-                <Routes>
-                    {/* ── Public Auth ── */}
+                <div className="flex flex-col min-h-screen bg-slate-100">
+                    <GovBanner />
+                    <div className="flex-1 flex flex-col min-h-0">
+                        <Routes>
+                            {/* ── Public Auth ── */}
                     <Route path="/" element={<AuthPage />} />
 
                     {/* ── Citizen Dashboard ── */}
@@ -69,7 +75,9 @@ function App() {
 
                     {/* ── Catch-all → Login ── */}
                     <Route path="*" element={<Navigate to="/" replace />} />
-                </Routes>
+                        </Routes>
+                    </div>
+                </div>
             </BrowserRouter>
         </AuthProvider>
     );
