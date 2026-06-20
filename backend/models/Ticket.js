@@ -29,17 +29,35 @@ const ticketSchema = new mongoose.Schema({
   },
   status: { 
     type: String, 
-    enum: ['Pending', 'Assigned', 'In Progress', 'Resolved'], 
+    enum: ['Pending', 'Assigned', 'In Progress', 'Resolved', 'Rejected'], 
     default: 'Pending' 
   },
-  evidenceUrl: { 
-    type: String, 
-    default: null // In case they upload a photo of a pothole/leak
+  verificationStatus: {
+    type: String,
+    enum: ['Pending', 'Verified Real', 'Flagged False'],
+    default: 'Pending'
   },
   resolutionNotes: { 
     type: String,
     default: null // The officer fills this out when marking as 'Resolved'
-  }
+  },
+  // --- Media Arrays (Cloudinary URLs) ---
+  citizenMedia: [{ 
+    type: String 
+  }],
+  officerVerificationMedia: [{ 
+    type: String 
+  }],
+  officerProgressMedia: [{ 
+    type: String 
+  }],
+  officerResolutionMedia: [{ 
+    type: String 
+  }],
+  adminMessages: [{
+    message: String,
+    timestamp: { type: Date, default: Date.now }
+  }]
 }, { timestamps: true });
 
 module.exports = mongoose.model('Ticket', ticketSchema);

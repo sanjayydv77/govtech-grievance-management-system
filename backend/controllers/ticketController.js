@@ -1,0 +1,307 @@
+const Ticket = require('../models/Ticket');
+const { classifyComplaint } = require('../utils/geminiRotator');
+
+// Helper to pull Cloudinary URLs from multer req.files
+const extractMediaUrls = (files) => {
+    if (!files || files.length === 0) return [];
+    return files.map(file => file.path);
+};
+
+// ─────────────────────────────────────────────────────────────────
+// CITIZEN — Create a new ticket
+// ─────────────────────────────────────────────────────────────────
+const createTicket = async (req, res) => {
+    try {
+        const { title, description, location } = req.body;
+
+        if (!title || !description || !location) {
+            return res.status(400).json({ error: 'Title, description, and location are required' });
+        }
+
+        // Call Gemini Round-Robin logic for the department
+        let department = 'Unknown';
+        try {
+            const aiClassification = await classifyComplaint(description);
+            department = aiClassification.department || 'Unknown';
+        } catch (aiError) {
+            console.error('Gemini Classification failed, defaulting to Unknown:', aiError);
+        }
+
+        const citizenMedia = extractMediaUrls(req.files);
+
+        const newTicket = new Ticket({
+            citizenId: req.user._id, // Populated by real auth middleware
+            title,
+            description,
+            location,
+            department,
+            citizenMedia,
+            status: 'Pending',
+            verificationStatus: 'Pending'
+        });
+
+        await newTicket.save();
+
+        res.status(201).json({
+            message: 'Ticket created and classified successfully',
+            ticket: newTicket
+        });
+    } catch (error) {
+        console.error('Create Ticket Error:', error);
+        res.status(500).json({ error: 'Server error processing ticket creation' });
+    }
+};
+
+// ─────────────────────────────────────────────────────────────────
+// CITIZEN — Get their own tickets
+// ─────────────────────────────────────────────────────────────────
+const getCitizenTickets = async (req, res) => {
+    try {
+        const tickets = await Ticket.find({ citizenId: req.user._id })
+            .populate('assignedOfficerId', 'name department email')
+            .sort({ createdAt: -1 });
+        res.status(200).json(tickets);
+    } catch (error) {
+        console.error('GetCitizenTickets Error:', error);
+        res.status(500).json({ error: 'Server error fetching your tickets' });
+    }
+};
+
+// ─────────────────────────────────────────────────────────────────
+// OFFICER — Get tickets assigned to them
+// ─────────────────────────────────────────────────────────────────
+const getMyTickets = async (req, res) => {
+    try {
+        const tickets = await Ticket.find({ assignedOfficerId: req.user._id })
+            .populate('citizenId', 'name email phone')
+            .sort({ createdAt: -1 });
+        res.status(200).json(tickets);
+    } catch (error) {
+        console.error('GetMyTickets Error:', error);
+        res.status(500).json({ error: 'Server error fetching assigned tickets' });
+    }
+};
+
+// ─────────────────────────────────────────────────────────────────
+// OFFICER — Verify ticket (real/false) + upload field proof
+// ─────────────────────────────────────────────────────────────────
+const verifyTicket = async (req, res) => {
+    try {
+        const { verificationStatus } = req.body;
+        const ticketId = req.params.id;
+
+        const ticket = await Ticket.findById(ticketId);
+        if (!ticket) return res.status(404).json({ error: 'Ticket not found' });
+
+        ticket.verificationStatus = verificationStatus;
+
+        if (verificationStatus === 'Flagged False') {
+            ticket.status = 'Rejected';
+        } else if (verificationStatus === 'Verified Real' && ticket.status === 'Pending') {
+            ticket.status = 'Assigned';
+            ticket.assignedOfficerId = req.user._id; // Auto-assign verifying officer
+        }
+
+        const officerVerificationMedia = extractMediaUrls(req.files);
+        if (officerVerificationMedia.length > 0) {
+            ticket.officerVerificationMedia.push(...officerVerificationMedia);
+        }
+
+        await ticket.save();
+        res.status(200).json({ message: 'Ticket verification completed', ticket });
+    } catch (error) {
+        console.error('Verify Ticket Error:', error);
+        res.status(500).json({ error: 'Server error verifying ticket' });
+    }
+};
+
+// ─────────────────────────────────────────────────────────────────
+// OFFICER — Update ticket to 'In Progress' + upload work media
+// ─────────────────────────────────────────────────────────────────
+const updateProgress = async (req, res) => {
+    try {
+        const ticketId = req.params.id;
+
+        const ticket = await Ticket.findById(ticketId);
+        if (!ticket) return res.status(404).json({ error: 'Ticket not found' });
+
+        ticket.status = 'In Progress';
+
+        const officerProgressMedia = extractMediaUrls(req.files);
+        if (officerProgressMedia.length > 0) {
+            ticket.officerProgressMedia.push(...officerProgressMedia);
+        }
+
+        await ticket.save();
+        res.status(200).json({ message: 'Ticket progress updated', ticket });
+    } catch (error) {
+        console.error('Update Progress Error:', error);
+        res.status(500).json({ error: 'Server error updating ticket progress' });
+    }
+};
+
+// ─────────────────────────────────────────────────────────────────
+// OFFICER — Mark as Resolved + upload resolution media
+// ─────────────────────────────────────────────────────────────────
+const resolveTicket = async (req, res) => {
+    try {
+        const { resolutionNotes } = req.body;
+        const ticketId = req.params.id;
+
+        const ticket = await Ticket.findById(ticketId);
+        if (!ticket) return res.status(404).json({ error: 'Ticket not found' });
+
+        ticket.status = 'Resolved';
+        if (resolutionNotes) {
+            ticket.resolutionNotes = resolutionNotes;
+        }
+
+        const officerResolutionMedia = extractMediaUrls(req.files);
+        if (officerResolutionMedia.length > 0) {
+            ticket.officerResolutionMedia.push(...officerResolutionMedia);
+        }
+
+        await ticket.save();
+        res.status(200).json({ message: 'Ticket marked as resolved', ticket });
+    } catch (error) {
+        console.error('Resolve Ticket Error:', error);
+        res.status(500).json({ error: 'Server error resolving ticket' });
+    }
+};
+
+// ─────────────────────────────────────────────────────────────────
+// ADMIN — Get all tickets (full list with citizen & officer info)
+// ─────────────────────────────────────────────────────────────────
+const getAllTickets = async (req, res) => {
+    try {
+        // Optional filters via query params: ?status=Pending&department=PWD
+        const filter = {};
+        if (req.query.status) filter.status = req.query.status;
+        if (req.query.department) filter.department = req.query.department;
+        if (req.query.verificationStatus) filter.verificationStatus = req.query.verificationStatus;
+
+        const tickets = await Ticket.find(filter)
+            .populate('citizenId', 'name email phone')
+            .populate('assignedOfficerId', 'name department email')
+            .sort({ createdAt: -1 });
+        res.status(200).json(tickets);
+    } catch (error) {
+        console.error('GetAllTickets Error:', error);
+        res.status(500).json({ error: 'Server error fetching tickets' });
+    }
+};
+
+// ─────────────────────────────────────────────────────────────────
+// ADMIN — Assign an officer to a ticket
+// ─────────────────────────────────────────────────────────────────
+const assignOfficer = async (req, res) => {
+    try {
+        const ticketId = req.params.id;
+        const { officerId } = req.body;
+
+        if (!officerId) {
+            return res.status(400).json({ error: 'officerId is required' });
+        }
+
+        const ticket = await Ticket.findById(ticketId);
+        if (!ticket) return res.status(404).json({ error: 'Ticket not found' });
+
+        ticket.assignedOfficerId = officerId;
+        if (ticket.status === 'Pending') {
+            ticket.status = 'Assigned'; // Escalate from pending to assigned
+        }
+
+        await ticket.save();
+
+        const updatedTicket = await Ticket.findById(ticketId)
+            .populate('citizenId', 'name email phone')
+            .populate('assignedOfficerId', 'name department email');
+
+        res.status(200).json({ message: 'Officer assigned successfully', ticket: updatedTicket });
+    } catch (error) {
+        console.error('AssignOfficer Error:', error);
+        res.status(500).json({ error: 'Server error assigning officer' });
+    }
+};
+
+// ─────────────────────────────────────────────────────────────────
+// ADMIN — Add feedback message to a ticket
+// ─────────────────────────────────────────────────────────────────
+const addAdminFeedback = async (req, res) => {
+    try {
+        const ticketId = req.params.id;
+        const { message } = req.body;
+
+        if (!message) return res.status(400).json({ error: 'Message is required' });
+
+        const ticket = await Ticket.findById(ticketId);
+        if (!ticket) return res.status(404).json({ error: 'Ticket not found' });
+
+        ticket.adminMessages.push({ message });
+        await ticket.save();
+
+        res.status(200).json({ message: 'Feedback added successfully', ticket });
+    } catch (error) {
+        console.error('AddAdminFeedback Error:', error);
+        res.status(500).json({ error: 'Server error adding feedback' });
+    }
+};
+
+// ─────────────────────────────────────────────────────────────────
+// ADMIN & CM — Get aggregated statistics
+// ─────────────────────────────────────────────────────────────────
+const getStats = async (req, res) => {
+    try {
+        const [
+            totalTickets,
+            pendingCount,
+            assignedCount,
+            inProgressCount,
+            resolvedCount,
+            rejectedCount,
+            pendingVerificationCount,
+            departmentStats
+        ] = await Promise.all([
+            Ticket.countDocuments(),
+            Ticket.countDocuments({ status: 'Pending' }),
+            Ticket.countDocuments({ status: 'Assigned' }),
+            Ticket.countDocuments({ status: 'In Progress' }),
+            Ticket.countDocuments({ status: 'Resolved' }),
+            Ticket.countDocuments({ status: 'Rejected' }),
+            Ticket.countDocuments({ verificationStatus: 'Pending' }),
+            Ticket.aggregate([
+                { $group: { _id: '$department', count: { $sum: 1 } } },
+                { $sort: { count: -1 } }
+            ])
+        ]);
+
+        res.status(200).json({
+            total: totalTickets,
+            byStatus: {
+                pending: pendingCount,
+                assigned: assignedCount,
+                inProgress: inProgressCount,
+                resolved: resolvedCount,
+                rejected: rejectedCount,
+            },
+            pendingVerification: pendingVerificationCount,
+            byDepartment: departmentStats,
+        });
+    } catch (error) {
+        console.error('GetStats Error:', error);
+        res.status(500).json({ error: 'Server error fetching statistics' });
+    }
+};
+
+module.exports = {
+    createTicket,
+    getCitizenTickets,
+    getMyTickets,
+    verifyTicket,
+    updateProgress,
+    resolveTicket,
+    getAllTickets,
+    assignOfficer,
+    addAdminFeedback,
+    getStats,
+};

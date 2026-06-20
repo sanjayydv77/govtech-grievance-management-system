@@ -1,5 +1,5 @@
-import { GoogleGenAI } from '@google/genai';
-import dotenv from 'dotenv';
+const { GoogleGenAI } = require('@google/genai');
+const dotenv = require('dotenv');
 
 dotenv.config();
 
@@ -30,7 +30,7 @@ function getNextApiKey() {
  * @param {string} text - The complaint text
  * @returns {Promise<{department: string}>}
  */
-export async function classifyComplaint(text) {
+async function classifyComplaint(text) {
     const apiKey = getNextApiKey();
     const ai = new GoogleGenAI({ apiKey: apiKey });
 
@@ -58,3 +58,5 @@ Complaint text: "${text}"`;
         throw new Error('Failed to classify complaint due to AI service error.');
     }
 }
+
+module.exports = { classifyComplaint };
