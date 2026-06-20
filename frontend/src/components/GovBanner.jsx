@@ -40,17 +40,37 @@ const GovBanner = () => {
             {/* Main Banner Content */}
             <div className="px-4 sm:px-8 py-3 flex items-center justify-between border-b-4 border-blue-800 shadow-sm bg-white z-50">
                 
-                {/* Left: Emblem & Portal Title */}
+                {/* Left: PM, Emblem & Portal Title */}
                 <div className="flex items-center gap-4 sm:gap-6">
-                    <img 
-                        src="/emblem.svg" 
-                        alt="National Emblem" 
-                        className="h-28 w-auto drop-shadow-sm"
-                    />
-                    <div className="hidden sm:flex flex-col justify-center">
-                        <h1 className="text-3xl font-black text-blue-900 tracking-tight leading-none mb-1">CM Grievance Portal</h1>
-                        <h2 className="text-sm font-bold text-slate-700 uppercase tracking-widest">Govt. of NCT of Delhi</h2>
-                        <div className="h-1 w-16 bg-amber-500 mt-2 rounded-full"></div>
+                    {/* PM Photo */}
+                    <div className="flex items-center gap-3">
+                        <img 
+                            src="/pm_modi.png" 
+                            alt="Shri Narendra Modi, Prime Minister of India" 
+                            className="h-28 w-24 object-cover shadow-sm border border-slate-200 rounded-sm"
+                        />
+                        <div className="hidden sm:flex flex-col justify-center">
+                            <p className="text-xs font-bold text-blue-900 mb-0.5">श्री नरेन्द्र मोदी</p>
+                            <p className="text-[10px] text-slate-600 font-semibold uppercase">माननीय प्रधान मंत्री</p>
+                            <p className="text-xs font-bold text-blue-900 mt-1">Shri Narendra Modi</p>
+                            <p className="text-[10px] text-slate-600 font-semibold uppercase">Hon'ble Prime Minister</p>
+                        </div>
+                    </div>
+
+                    <div className="h-24 w-px bg-slate-300 mx-2 hidden lg:block"></div>
+
+                    {/* Emblem & Title */}
+                    <div className="flex items-center gap-4">
+                        <img 
+                            src="/emblem.svg" 
+                            alt="National Emblem" 
+                            className="h-28 w-auto drop-shadow-sm"
+                        />
+                        <div className="hidden xl:block">
+                            <h1 className="text-3xl font-black text-blue-900 tracking-tight leading-none mb-1">CM Grievance Portal</h1>
+                            <h2 className="text-sm font-bold text-slate-700 uppercase tracking-widest">Govt. of NCT of Delhi</h2>
+                            <div className="h-1 w-16 bg-amber-500 mt-2 rounded-full"></div>
+                        </div>
                     </div>
                 </div>
 
