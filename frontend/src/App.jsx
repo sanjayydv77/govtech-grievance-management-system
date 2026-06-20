@@ -1,63 +1,82 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './context/AuthContext';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './routes/ProtectedRoute';
+
+// Auth
 import AuthPage from './pages/Auth/AuthPage';
 
-// Import Layouts and Pages
+// Admin
 import AdminLayout from './layouts/AdminLayout';
 import AdminDashboard from './pages/Admin/AdminDashboard';
 
-// Placeholder Component for other roles
-const DashboardPlaceholder = ({ title, roleInfo }) => {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
-
-  const handleLogout = () => {
-    logout();
-    navigate('/');
-  };
-
-  return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
-      <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-lg text-center border border-slate-200">
-        <h1 className="text-2xl font-bold text-slate-900 mb-4">{title}</h1>
-        <div className="bg-slate-100 rounded-lg p-4 mb-6">
-          <p className="text-sm font-semibold text-slate-600 mb-1">Current User</p>
-          <p className="text-lg font-bold text-slate-800">{user?.name || 'Guest'}</p>
-          <p className="text-sm text-slate-500">{user?.email}</p>
-          <p className="text-xs bg-indigo-100 text-indigo-700 uppercase font-bold py-1 px-3 rounded-full inline-block mt-2">
-            {user?.role}
-          </p>
-        </div>
-        <p className="text-slate-600 mb-8">{roleInfo}</p>
-        <button
-          onClick={handleLogout}
-          className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors"
-        >
-          Logout
-        </button>
-      </div>
+// ─────────────────────────────────────────────────────────────────
+// Placeholder components for dashboards being built by your team.
+// These will be replaced by the real components once your team
+// merges their branches. The ProtectedRoute guards are already
+// wired correctly so connectivity will work automatically.
+// ─────────────────────────────────────────────────────────────────
+const PublicDashboard = () => (
+  <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+    <div className="bg-white p-10 rounded-2xl shadow-lg border border-slate-200 text-center max-w-md">
+      <div className="text-5xl mb-4">🏛️</div>
+      <h1 className="text-2xl font-bold text-slate-800 mb-2">Citizen Dashboard</h1>
+      <p className="text-slate-500 text-sm">Under development by the team. Submit & track your grievances here.</p>
     </div>
-  );
-};
+  </div>
+);
 
-const PublicDashboard = () => <DashboardPlaceholder title="Citizen Dashboard" roleInfo="Submit grievances, track status, and view updates." />;
-const OfficerDashboard = () => <DashboardPlaceholder title="Officer Dashboard" roleInfo="Verify complaints, update progress, and resolve tickets." />;
-const CMDashboard = () => <DashboardPlaceholder title="CM Analytics Dashboard" roleInfo="High-level metrics, portal health, and strategic overview." />;
+const OfficerDashboard = () => (
+  <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+    <div className="bg-white p-10 rounded-2xl shadow-lg border border-slate-200 text-center max-w-md">
+      <div className="text-5xl mb-4">👮</div>
+      <h1 className="text-2xl font-bold text-slate-800 mb-2">Officer Dashboard</h1>
+      <p className="text-slate-500 text-sm">Under development by the team. Verify & resolve assigned complaints here.</p>
+    </div>
+  </div>
+);
+
+const CMDashboard = () => (
+  <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+    <div className="bg-white p-10 rounded-2xl shadow-lg border border-slate-200 text-center max-w-md">
+      <div className="text-5xl mb-4">📊</div>
+      <h1 className="text-2xl font-bold text-slate-800 mb-2">CM Analytics Dashboard</h1>
+      <p className="text-slate-500 text-sm">Under development by the team. High-level metrics & strategic overview.</p>
+    </div>
+  </div>
+);
 
 const AppRoutes = () => {
   return (
     <Routes>
+      {/* ── Public Auth Page ── */}
       <Route path="/" element={<AuthPage />} />
-      <Route path="/dashboard/public" element={<PublicDashboard />} />
-      <Route path="/dashboard/officer" element={<OfficerDashboard />} />
-      <Route path="/dashboard/cm" element={<CMDashboard />} />
 
-      {/* Admin Routes Wrapped in AdminLayout */}
-      <Route path="/dashboard/admin" element={<AdminLayout />}>
-        <Route index element={<AdminDashboard />} />
-        {/* Future sub-routes can be added here */}
+      {/* ── Citizen (Public) Dashboard ── */}
+      <Route element={<ProtectedRoute allowedRoles={['citizen']} />}>
+        <Route path="/dashboard/public" element={<PublicDashboard />} />
       </Route>
+
+      {/* ── Officer Dashboard ── */}
+      <Route element={<ProtectedRoute allowedRoles={['officer']} />}>
+        <Route path="/dashboard/officer" element={<OfficerDashboard />} />
+      </Route>
+
+      {/* ── CM Dashboard ── */}
+      <Route element={<ProtectedRoute allowedRoles={['cm']} />}>
+        <Route path="/dashboard/cm" element={<CMDashboard />} />
+      </Route>
+
+      {/* ── Admin Dashboard (with nested sub-routes) ── */}
+      <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+        <Route path="/dashboard/admin" element={<AdminLayout />}>
+          <Route index element={<AdminDashboard />} />
+          {/* Future admin sub-pages will slot in here */}
+        </Route>
+      </Route>
+
+      {/* ── Catch-all: redirect unknown routes to login ── */}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 };

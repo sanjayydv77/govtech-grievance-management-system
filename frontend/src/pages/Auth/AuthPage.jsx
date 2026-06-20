@@ -345,8 +345,8 @@ const AuthPage = () => {
                 className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 <option value="citizen">Citizen</option>
-                <option value="officer">Officer</option>
-                <option value="admin">Admin</option>
+                <option value="officer">Officer (Government Employee)</option>
+                {/* Admin and CM accounts are created by system administrators only */}
               </select>
             </div>
           )}
