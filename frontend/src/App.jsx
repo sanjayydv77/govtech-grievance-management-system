@@ -16,6 +16,9 @@ import UserManagement from './pages/Admin/UserManagement';
 // ── Shared ────────────────────────────────────────────────────
 import GovBanner from './components/GovBanner';
 
+// ── Public (Shivan) ───────────────────────────────────────────
+import PublicDashboard from './pages/Public/PublicDashboard';
+
 // ── Placeholders (team members' dashboards — replace when merged) ─
 const PlaceholderPage = ({ emoji, title, desc }) => (
     <div className="flex-1 bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
@@ -28,7 +31,6 @@ const PlaceholderPage = ({ emoji, title, desc }) => (
     </div>
 );
 
-const PublicDashboard  = () => <PlaceholderPage emoji="🏛️" title="Citizen Dashboard" desc="Register and track your grievances. Built by Shivan — coming soon." />;
 const OfficerDashboard = () => <PlaceholderPage emoji="👮" title="Officer Dashboard" desc="Verify and resolve assigned complaints. Built by Shubham — coming soon." />;
 const CMDashboard      = () => <PlaceholderPage emoji="📊" title="CM Analytics Dashboard" desc="High-level monitoring and strategic overview of all portal activity." />;
 
@@ -42,39 +44,39 @@ function App() {
                     <div className="flex-1 flex flex-col min-h-0">
                         <Routes>
                             {/* ── Public Auth ── */}
-                    <Route path="/" element={<AuthPage />} />
+                            <Route path="/" element={<AuthPage />} />
 
-                    {/* ── Citizen Dashboard ── */}
-                    <Route element={<ProtectedRoute allowedRoles={['citizen']} />}>
-                        <Route path="/dashboard/public" element={<PublicDashboard />} />
-                    </Route>
+                            {/* ── Citizen Dashboard ── */}
+                            <Route element={<ProtectedRoute allowedRoles={['citizen']} />}>
+                                <Route path="/dashboard/public" element={<PublicDashboard />} />
+                            </Route>
 
-                    {/* ── Officer Dashboard ── */}
-                    <Route element={<ProtectedRoute allowedRoles={['officer']} />}>
-                        <Route path="/dashboard/officer" element={<OfficerDashboard />} />
-                    </Route>
+                            {/* ── Officer Dashboard ── */}
+                            <Route element={<ProtectedRoute allowedRoles={['officer']} />}>
+                                <Route path="/dashboard/officer" element={<OfficerDashboard />} />
+                            </Route>
 
-                    {/* ── CM Dashboard ── */}
-                    <Route element={<ProtectedRoute allowedRoles={['cm']} />}>
-                        <Route path="/dashboard/cm" element={<CMDashboard />} />
-                    </Route>
+                            {/* ── CM Dashboard ── */}
+                            <Route element={<ProtectedRoute allowedRoles={['cm']} />}>
+                                <Route path="/dashboard/cm" element={<CMDashboard />} />
+                            </Route>
 
-                    {/* ── Admin Dashboard (4 pages) ── */}
-                    <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
-                        <Route path="/dashboard/admin" element={<AdminLayout />}>
-                            {/* index = /dashboard/admin */}
-                            <Route index element={<AdminDashboard />} />
-                            {/* /dashboard/admin/complaints */}
-                            <Route path="complaints" element={<AllComplaints />} />
-                            {/* /dashboard/admin/officers */}
-                            <Route path="officers" element={<ManageOfficers />} />
-                            {/* /dashboard/admin/users */}
-                            <Route path="users" element={<UserManagement />} />
-                        </Route>
-                    </Route>
+                            {/* ── Admin Dashboard (4 pages) ── */}
+                            <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+                                <Route path="/dashboard/admin" element={<AdminLayout />}>
+                                    {/* index = /dashboard/admin */}
+                                    <Route index element={<AdminDashboard />} />
+                                    {/* /dashboard/admin/complaints */}
+                                    <Route path="complaints" element={<AllComplaints />} />
+                                    {/* /dashboard/admin/officers */}
+                                    <Route path="officers" element={<ManageOfficers />} />
+                                    {/* /dashboard/admin/users */}
+                                    <Route path="users" element={<UserManagement />} />
+                                </Route>
+                            </Route>
 
-                    {/* ── Catch-all → Login ── */}
-                    <Route path="*" element={<Navigate to="/" replace />} />
+                            {/* ── Catch-all → Login ── */}
+                            <Route path="*" element={<Navigate to="/" replace />} />
                         </Routes>
                     </div>
                 </div>
