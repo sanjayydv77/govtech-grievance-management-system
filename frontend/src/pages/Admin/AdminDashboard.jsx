@@ -1,345 +1,241 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { fetchAllTickets, fetchStats, fetchOfficers, assignOfficerToTicket } from '../../services/api';
-import TicketDetailsModal from '../../components/TicketDetailsModal';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { fetchStats, fetchAllTickets, fetchOfficers } from '../../services/api';
 
-// ── Stat Card ─────────────────────────────────────────────────
-const StatCard = ({ title, value, icon, colorClass, loading }) => (
-    <div className={`bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex items-center gap-4 hover:shadow-md transition-shadow duration-300`}>
-        <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 ${colorClass}`}>
-            {icon}
-        </div>
+// ── Helpers ───────────────────────────────────────────────────
+const StatusBadge = ({ status }) => {
+    const s = {
+        'Resolved': 'bg-emerald-100 text-emerald-700', 'In Progress': 'bg-blue-100 text-blue-700',
+        'Assigned': 'bg-indigo-100 text-indigo-700', 'Rejected': 'bg-red-100 text-red-700',
+        'Pending': 'bg-amber-100 text-amber-700',
+    };
+    return <span className={`px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap ${s[status] || 'bg-slate-100 text-slate-600'}`}>{status}</span>;
+};
+
+const StatCard = ({ title, value, icon, bg, textColor, loading, onClick }) => (
+    <div onClick={onClick} className={`bg-white rounded-2xl border border-slate-200 p-5 flex items-center gap-4 hover:shadow-md transition-all duration-200 ${onClick ? 'cursor-pointer hover:-translate-y-0.5' : ''}`}>
+        <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl flex-shrink-0 ${bg}`}>{icon}</div>
         <div className="min-w-0">
-            <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">{title}</p>
-            <p className="text-3xl font-bold text-slate-800 mt-0.5">
-                {loading ? <span className="inline-block w-8 h-7 bg-slate-200 rounded animate-pulse" /> : value}
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider truncate">{title}</p>
+            <p className={`text-3xl font-bold mt-0.5 ${textColor || 'text-slate-800'}`}>
+                {loading ? <span className="inline-block w-10 h-7 bg-slate-200 rounded animate-pulse" /> : (value ?? 0)}
             </p>
         </div>
     </div>
 );
 
-// ── Status Badge ──────────────────────────────────────────────
-const StatusBadge = ({ status }) => {
-    const styles = {
-        'Resolved':    'bg-emerald-100 text-emerald-700',
-        'In Progress': 'bg-blue-100 text-blue-700',
-        'Assigned':    'bg-indigo-100 text-indigo-700',
-        'Rejected':    'bg-red-100 text-red-700',
-        'Pending':     'bg-amber-100 text-amber-700',
-    };
-    return (
-        <span className={`px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${styles[status] || 'bg-slate-100 text-slate-600'}`}>
-            {status}
-        </span>
-    );
-};
+const Skeleton = ({ h = 'h-4', w = 'w-full', className = '' }) => (
+    <div className={`${h} ${w} bg-slate-200 rounded animate-pulse ${className}`} />
+);
 
-// ── Main Dashboard ────────────────────────────────────────────
+// ── Main Component ────────────────────────────────────────────
 const AdminDashboard = () => {
+    const [stats, setStats] = useState(null);
     const [tickets, setTickets] = useState([]);
     const [officers, setOfficers] = useState([]);
-    const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [selectedTicket, setSelectedTicket] = useState(null);
-
-    // Filters
-    const [statusFilter, setStatusFilter] = useState('');
-    const [departmentFilter, setDepartmentFilter] = useState('');
-    const [searchQuery, setSearchQuery] = useState('');
-
-    // Assign officer UI state
-    const [assigningTicketId, setAssigningTicketId] = useState(null);
-    const [assigningOfficerId, setAssigningOfficerId] = useState('');
-    const [assigning, setAssigning] = useState(false);
-
-    // ── Data fetching ──────────────────────────────────────────
-    const loadData = useCallback(async () => {
-        setLoading(true);
-        try {
-            const filters = {};
-            if (statusFilter) filters.status = statusFilter;
-            if (departmentFilter) filters.department = departmentFilter;
-
-            const [ticketsData, officersData, statsData] = await Promise.all([
-                fetchAllTickets(filters),
-                fetchOfficers(),
-                fetchStats(),
-            ]);
-            setTickets(ticketsData);
-            setOfficers(officersData);
-            setStats(statsData);
-        } catch (error) {
-            console.error('Error loading dashboard data:', error);
-        } finally {
-            setLoading(false);
-        }
-    }, [statusFilter, departmentFilter]);
+    const navigate = useNavigate();
 
     useEffect(() => {
-        loadData();
-    }, [loadData]);
+        const load = async () => {
+            try {
+                const [s, t, o] = await Promise.all([fetchStats(), fetchAllTickets(), fetchOfficers()]);
+                setStats(s);
+                setTickets(t);
+                setOfficers(o);
+            } catch (e) { console.error('Overview load error:', e); }
+            finally { setLoading(false); }
+        };
+        load();
+    }, []);
 
-    // ── Filtered tickets (client-side search) ─────────────────
-    const filteredTickets = tickets.filter(ticket => {
-        if (!searchQuery.trim()) return true;
-        const q = searchQuery.toLowerCase();
-        return (
-            ticket.title?.toLowerCase().includes(q) ||
-            ticket.location?.toLowerCase().includes(q) ||
-            ticket.citizenId?.name?.toLowerCase().includes(q) ||
-            ticket.department?.toLowerCase().includes(q)
-        );
-    });
+    // Officer performance derived from ticket data
+    const officerPerf = useMemo(() => {
+        const map = {};
+        tickets.forEach(t => {
+            if (t.assignedOfficerId?._id) {
+                const id = t.assignedOfficerId._id;
+                if (!map[id]) map[id] = { officer: t.assignedOfficerId, total: 0, resolved: 0, inProgress: 0, pending: 0 };
+                map[id].total++;
+                if (t.status === 'Resolved') map[id].resolved++;
+                else if (t.status === 'In Progress') map[id].inProgress++;
+                else if (t.status === 'Pending' || t.status === 'Assigned') map[id].pending++;
+            }
+        });
+        return Object.values(map).sort((a, b) => b.resolved - a.resolved).slice(0, 5);
+    }, [tickets]);
 
-    // ── Assign officer handler ─────────────────────────────────
-    const handleAssignOfficer = async (ticketId) => {
-        if (!assigningOfficerId) return;
-        setAssigning(true);
-        try {
-            const data = await assignOfficerToTicket(ticketId, assigningOfficerId);
-            // Update ticket in state with the returned updated ticket
-            setTickets(prev => prev.map(t => t._id === ticketId ? data.ticket : t));
-            setAssigningTicketId(null);
-            setAssigningOfficerId('');
-            // Refresh stats after assignment
-            const statsData = await fetchStats();
-            setStats(statsData);
-        } catch (error) {
-            console.error('Error assigning officer:', error);
-            alert('Failed to assign officer. Please try again.');
-        } finally {
-            setAssigning(false);
-        }
-    };
-
-    // ── Modal ticket update callback (fixes prop mutation bug) ─
-    const handleTicketUpdated = (updatedTicket) => {
-        setTickets(prev => prev.map(t => t._id === updatedTicket._id ? updatedTicket : t));
-        if (selectedTicket?._id === updatedTicket._id) {
-            setSelectedTicket(updatedTicket);
-        }
-    };
-
-    // ── Export CSV ─────────────────────────────────────────────
-    const handleExportCSV = () => {
-        if (filteredTickets.length === 0) return;
-        const headers = ['ID', 'Title', 'Location', 'Department', 'Status', 'Verification', 'Citizen', 'Officer', 'Filed On'];
-        const rows = filteredTickets.map(t => [
-            t._id,
-            `"${t.title}"`,
-            `"${t.location}"`,
-            t.department,
-            t.status,
-            t.verificationStatus,
-            t.citizenId?.name || 'Anonymous',
-            t.assignedOfficerId?.name || 'Unassigned',
-            new Date(t.createdAt).toLocaleDateString('en-IN'),
-        ]);
-        const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `complaints_${new Date().toISOString().split('T')[0]}.csv`;
-        a.click();
-        URL.revokeObjectURL(url);
-    };
-
-    // ── Department list from stats ────────────────────────────
-    const departments = stats?.byDepartment?.map(d => d._id).filter(Boolean) || [];
+    const recentTickets = tickets.slice(0, 8);
+    const maxDeptCount = Math.max(...(stats?.byDepartment?.map(d => d.count) || [1]), 1);
+    const resRate = stats?.total ? Math.round(((stats.byStatus?.resolved || 0) / stats.total) * 100) : 0;
 
     return (
-        <div className="max-w-7xl mx-auto space-y-7">
+        <div className="space-y-6">
 
-            {/* ── Stat Cards ── */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                <StatCard title="Total Complaints" value={stats?.total ?? 0} icon="📋" colorClass="bg-slate-100" loading={loading} />
-                <StatCard title="Pending Verification" value={stats?.pendingVerification ?? 0} icon="⏳" colorClass="bg-amber-100" loading={loading} />
-                <StatCard title="In Progress" value={stats?.byStatus?.inProgress ?? 0} icon="🔧" colorClass="bg-blue-100" loading={loading} />
-                <StatCard title="Resolved" value={stats?.byStatus?.resolved ?? 0} icon="✅" colorClass="bg-emerald-100" loading={loading} />
+            {/* ── Page Header ── */}
+            <div className="flex items-center justify-between flex-wrap gap-3">
+                <div>
+                    <h2 className="text-2xl font-bold text-slate-800">Good {new Date().getHours() < 12 ? 'Morning' : new Date().getHours() < 17 ? 'Afternoon' : 'Evening'} 👋</h2>
+                    <p className="text-slate-500 text-sm mt-0.5">Here's what's happening on the Delhi CM Portal today.</p>
+                </div>
+                <div className="flex gap-2">
+                    <button onClick={() => navigate('/dashboard/admin/complaints')} className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors shadow-sm shadow-indigo-200">
+                        Manage Complaints →
+                    </button>
+                </div>
             </div>
 
-            {/* ── Department Breakdown ── */}
-            {stats?.byDepartment && stats.byDepartment.length > 0 && (
-                <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-                    <h2 className="text-sm font-semibold text-slate-700 mb-4 uppercase tracking-wide">Department Breakdown</h2>
-                    <div className="flex flex-wrap gap-3">
-                        {stats.byDepartment.map((dept) => (
-                            <div key={dept._id} className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-4 py-2">
-                                <span className="text-sm font-semibold text-slate-700">{dept._id || 'Unknown'}</span>
-                                <span className="bg-blue-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">{dept.count}</span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
+            {/* ── 6 Stat Cards ── */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-4">
+                <StatCard title="Total" value={stats?.total} icon="📋" bg="bg-slate-100" loading={loading} onClick={() => navigate('/dashboard/admin/complaints')} />
+                <StatCard title="Pending" value={stats?.byStatus?.pending} icon="⏳" bg="bg-amber-50" textColor="text-amber-700" loading={loading} onClick={() => navigate('/dashboard/admin/complaints?status=Pending')} />
+                <StatCard title="Assigned" value={stats?.byStatus?.assigned} icon="📌" bg="bg-indigo-50" textColor="text-indigo-700" loading={loading} />
+                <StatCard title="In Progress" value={stats?.byStatus?.inProgress} icon="🔧" bg="bg-blue-50" textColor="text-blue-700" loading={loading} />
+                <StatCard title="Resolved" value={stats?.byStatus?.resolved} icon="✅" bg="bg-emerald-50" textColor="text-emerald-700" loading={loading} />
+                <StatCard title="Rejected" value={stats?.byStatus?.rejected} icon="❌" bg="bg-red-50" textColor="text-red-600" loading={loading} />
+            </div>
 
-            {/* ── Complaints Table ── */}
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            {/* ── Middle Row: Dept Breakdown + Recent Activity ── */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-                {/* Table Header + Filters */}
-                <div className="p-5 border-b border-slate-200 bg-slate-50/50 flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-                    <h2 className="text-base font-semibold text-slate-800 flex-shrink-0">All Complaints</h2>
-                    <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-                        {/* Search */}
-                        <input
-                            type="text"
-                            placeholder="Search title, location..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="border border-slate-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-48"
-                        />
-                        {/* Status filter */}
-                        <select
-                            value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value)}
-                            className="border border-slate-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                            <option value="">All Statuses</option>
-                            <option value="Pending">Pending</option>
-                            <option value="Assigned">Assigned</option>
-                            <option value="In Progress">In Progress</option>
-                            <option value="Resolved">Resolved</option>
-                            <option value="Rejected">Rejected</option>
-                        </select>
-                        {/* Department filter */}
-                        <select
-                            value={departmentFilter}
-                            onChange={(e) => setDepartmentFilter(e.target.value)}
-                            className="border border-slate-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                            <option value="">All Departments</option>
-                            {departments.map(d => <option key={d} value={d}>{d}</option>)}
-                        </select>
-                        {/* Export */}
-                        <button
-                            onClick={handleExportCSV}
-                            className="text-sm font-medium text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors"
-                        >
-                            ↓ Export CSV
-                        </button>
-                    </div>
-                </div>
-
-                {/* Table Body */}
-                <div className="overflow-x-auto">
+                {/* Department Breakdown */}
+                <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+                    <h3 className="text-base font-bold text-slate-800 mb-5">Department Breakdown</h3>
                     {loading ? (
-                        <div className="flex items-center justify-center h-48 text-slate-400 text-sm">
-                            <div className="flex flex-col items-center gap-3">
-                                <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                                Loading complaints...
-                            </div>
-                        </div>
-                    ) : filteredTickets.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center h-48 text-slate-400 gap-2">
-                            <span className="text-3xl">📭</span>
-                            <p className="text-sm font-medium">No complaints match your filters.</p>
+                        <div className="space-y-4">{[1,2,3,4].map(i => (<div key={i}><div className="flex justify-between mb-1.5"><Skeleton h="h-3.5" w="w-24" /><Skeleton h="h-3.5" w="w-8" /></div><Skeleton h="h-2" /></div>))}</div>
+                    ) : stats?.byDepartment?.length ? (
+                        <div className="space-y-5">
+                            {stats.byDepartment.map(d => (
+                                <div key={d._id}>
+                                    <div className="flex justify-between items-center mb-1.5">
+                                        <span className="text-sm font-semibold text-slate-700">{d._id || 'Unknown'}</span>
+                                        <span className="text-sm font-bold text-slate-800 tabular-nums">{d.count} <span className="text-xs text-slate-400 font-normal">complaints</span></span>
+                                    </div>
+                                    <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                                        <div
+                                            className="h-2.5 rounded-full bg-gradient-to-r from-indigo-500 to-indigo-400 transition-all duration-700 ease-out"
+                                            style={{ width: `${Math.round((d.count / maxDeptCount) * 100)}%` }}
+                                        />
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     ) : (
-                        <table className="w-full text-left border-collapse text-sm">
-                            <thead>
-                                <tr className="bg-slate-50 text-slate-600 border-b border-slate-200">
-                                    <th className="px-5 py-3 font-semibold">Complaint</th>
-                                    <th className="px-5 py-3 font-semibold">Location</th>
-                                    <th className="px-5 py-3 font-semibold">Department</th>
-                                    <th className="px-5 py-3 font-semibold">Assigned Officer</th>
-                                    <th className="px-5 py-3 font-semibold">Status</th>
-                                    <th className="px-5 py-3 font-semibold text-right">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100">
-                                {filteredTickets.map((ticket) => (
-                                    <tr key={ticket._id} className="hover:bg-slate-50/80 transition-colors">
-                                        <td className="px-5 py-4">
-                                            <p className="font-medium text-slate-900 truncate max-w-[200px]">{ticket.title}</p>
-                                            <p className="text-xs text-slate-400 mt-0.5">{ticket.citizenId?.name || 'Anonymous'}</p>
-                                        </td>
-                                        <td className="px-5 py-4 text-slate-600 truncate max-w-[150px]">{ticket.location}</td>
-                                        <td className="px-5 py-4">
-                                            <span className="text-xs bg-slate-100 text-slate-700 px-2 py-1 rounded font-medium">
-                                                {ticket.department || '—'}
-                                            </span>
-                                        </td>
-                                        <td className="px-5 py-4">
-                                            {assigningTicketId === ticket._id ? (
-                                                // Inline assign UI
-                                                <div className="flex gap-2 items-center">
-                                                    <select
-                                                        value={assigningOfficerId}
-                                                        onChange={(e) => setAssigningOfficerId(e.target.value)}
-                                                        className="border border-slate-300 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 max-w-[130px]"
-                                                    >
-                                                        <option value="">Select officer</option>
-                                                        {officers.map(o => (
-                                                            <option key={o._id} value={o._id}>
-                                                                {o.name} ({o.department})
-                                                            </option>
-                                                        ))}
-                                                    </select>
-                                                    <button
-                                                        onClick={() => handleAssignOfficer(ticket._id)}
-                                                        disabled={assigning || !assigningOfficerId}
-                                                        className="text-xs bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white px-2 py-1 rounded-lg"
-                                                    >
-                                                        {assigning ? '...' : '✓'}
-                                                    </button>
-                                                    <button
-                                                        onClick={() => setAssigningTicketId(null)}
-                                                        className="text-xs text-slate-400 hover:text-slate-600 px-1"
-                                                    >
-                                                        ✕
-                                                    </button>
-                                                </div>
-                                            ) : ticket.assignedOfficerId?.name ? (
-                                                <div>
-                                                    <p className="text-slate-800 font-medium text-xs">{ticket.assignedOfficerId.name}</p>
-                                                    <p className="text-xs text-slate-400">{ticket.assignedOfficerId.department}</p>
-                                                </div>
-                                            ) : (
-                                                <button
-                                                    onClick={() => { setAssigningTicketId(ticket._id); setAssigningOfficerId(''); }}
-                                                    className="text-xs text-blue-600 hover:text-blue-800 font-medium underline underline-offset-2"
-                                                >
-                                                    + Assign Officer
-                                                </button>
-                                            )}
-                                        </td>
-                                        <td className="px-5 py-4">
-                                            <StatusBadge status={ticket.status} />
-                                        </td>
-                                        <td className="px-5 py-4 text-right">
-                                            <button
-                                                onClick={() => setSelectedTicket(ticket)}
-                                                className="text-xs font-semibold text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-2 rounded-lg transition-colors"
-                                            >
-                                                View Details
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                        <div className="flex flex-col items-center py-10 text-slate-300">
+                            <span className="text-4xl mb-2">📊</span>
+                            <p className="text-sm">No department data yet</p>
+                        </div>
                     )}
                 </div>
 
-                {/* Row count */}
-                {!loading && filteredTickets.length > 0 && (
-                    <div className="px-5 py-3 border-t border-slate-100 bg-slate-50/50">
-                        <p className="text-xs text-slate-400">
-                            Showing <span className="font-semibold text-slate-600">{filteredTickets.length}</span> of{' '}
-                            <span className="font-semibold text-slate-600">{tickets.length}</span> complaints
-                        </p>
+                {/* Recent Activity Feed */}
+                <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+                    <div className="flex items-center justify-between mb-5">
+                        <h3 className="text-base font-bold text-slate-800">Recent Activity</h3>
+                        <button onClick={() => navigate('/dashboard/admin/complaints')} className="text-xs text-indigo-600 hover:text-indigo-800 font-semibold">
+                            View All →
+                        </button>
                     </div>
-                )}
+                    {loading ? (
+                        <div className="space-y-4">{[1,2,3,4,5,6].map(i => (<div key={i} className="flex items-center gap-3"><Skeleton h="h-8" w="w-8" className="rounded-full flex-shrink-0" /><div className="flex-1 space-y-1.5"><Skeleton h="h-3" /><Skeleton h="h-3" w="w-2/3" /></div></div>))}</div>
+                    ) : recentTickets.length ? (
+                        <div className="space-y-1">
+                            {recentTickets.map(t => (
+                                <div key={t._id} className="flex items-center gap-3 py-2.5 border-b border-slate-50 last:border-0 group">
+                                    <div className="w-2 h-2 rounded-full flex-shrink-0 bg-indigo-400" />
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-semibold text-slate-800 truncate">{t.title}</p>
+                                        <p className="text-xs text-slate-400 truncate">{t.location} · {t.department || 'Unclassified'} · {new Date(t.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</p>
+                                    </div>
+                                    <StatusBadge status={t.status} />
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="flex flex-col items-center py-10 text-slate-300">
+                            <span className="text-4xl mb-2">📭</span>
+                            <p className="text-sm">No complaints yet</p>
+                        </div>
+                    )}
+                </div>
             </div>
 
-            {/* ── Ticket Details Modal ── */}
-            {selectedTicket && (
-                <TicketDetailsModal
-                    ticket={selectedTicket}
-                    onClose={() => setSelectedTicket(null)}
-                    onTicketUpdated={handleTicketUpdated}
-                />
+            {/* ── Officer Performance Table ── */}
+            {!loading && officerPerf.length > 0 && (
+                <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+                    <div className="flex items-center justify-between mb-5">
+                        <h3 className="text-base font-bold text-slate-800">Officer Performance</h3>
+                        <button onClick={() => navigate('/dashboard/admin/officers')} className="text-xs text-indigo-600 hover:text-indigo-800 font-semibold">
+                            Manage Officers →
+                        </button>
+                    </div>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                            <thead>
+                                <tr className="border-b border-slate-100">
+                                    {['Officer', 'Department', 'Assigned', 'In Progress', 'Resolved', 'Resolution Rate'].map(h => (
+                                        <th key={h} className="py-2.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider pr-4 last:text-center">{h}</th>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-50">
+                                {officerPerf.map(({ officer, total, resolved, inProgress }) => {
+                                    const rate = total > 0 ? Math.round((resolved / total) * 100) : 0;
+                                    return (
+                                        <tr key={officer._id} className="hover:bg-slate-50/50 transition-colors">
+                                            <td className="py-3.5 pr-4">
+                                                <div className="flex items-center gap-2.5">
+                                                    <div className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 font-bold text-sm flex items-center justify-center flex-shrink-0">
+                                                        {officer.name.charAt(0).toUpperCase()}
+                                                    </div>
+                                                    <span className="font-semibold text-slate-800 truncate">{officer.name}</span>
+                                                </div>
+                                            </td>
+                                            <td className="py-3.5 pr-4">
+                                                <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-lg text-xs font-medium">{officer.department || '—'}</span>
+                                            </td>
+                                            <td className="py-3.5 pr-4 font-bold text-slate-800 tabular-nums">{total}</td>
+                                            <td className="py-3.5 pr-4">
+                                                <span className="text-blue-600 font-bold tabular-nums">{inProgress}</span>
+                                            </td>
+                                            <td className="py-3.5 pr-4">
+                                                <span className="text-emerald-600 font-bold tabular-nums">{resolved}</span>
+                                            </td>
+                                            <td className="py-3.5 text-center">
+                                                <div className="flex items-center justify-center gap-2">
+                                                    <div className="w-16 bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                                                        <div className={`h-1.5 rounded-full ${rate >= 70 ? 'bg-emerald-500' : rate >= 40 ? 'bg-amber-500' : 'bg-red-400'}`} style={{ width: `${rate}%` }} />
+                                                    </div>
+                                                    <span className={`font-bold tabular-nums text-xs ${rate >= 70 ? 'text-emerald-600' : rate >= 40 ? 'text-amber-600' : 'text-red-500'}`}>{rate}%</span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             )}
+
+            {/* ── Bottom Summary Row ── */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="bg-gradient-to-br from-indigo-600 to-indigo-700 rounded-2xl p-5 text-white shadow-lg shadow-indigo-200">
+                    <p className="text-xs font-semibold text-indigo-200 uppercase tracking-wider mb-1">Active Officers</p>
+                    <p className="text-4xl font-bold">{loading ? '—' : officers.length}</p>
+                    <button onClick={() => navigate('/dashboard/admin/officers')} className="mt-3 text-xs text-indigo-200 hover:text-white font-medium">Manage →</button>
+                </div>
+                <div className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl p-5 text-white shadow-lg shadow-amber-200">
+                    <p className="text-xs font-semibold text-amber-100 uppercase tracking-wider mb-1">Needs Attention</p>
+                    <p className="text-4xl font-bold">{loading ? '—' : (stats?.pendingVerification ?? 0)}</p>
+                    <p className="mt-3 text-xs text-amber-100">Pending verification</p>
+                </div>
+                <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl p-5 text-white shadow-lg shadow-emerald-200">
+                    <p className="text-xs font-semibold text-emerald-100 uppercase tracking-wider mb-1">Resolution Rate</p>
+                    <p className="text-4xl font-bold">{loading ? '—' : `${resRate}%`}</p>
+                    <p className="mt-3 text-xs text-emerald-100">Overall portal performance</p>
+                </div>
+            </div>
         </div>
     );
 };

@@ -12,6 +12,8 @@ const {
     assignOfficer,
     addAdminFeedback,
     getStats,
+    adminUpdateStatus,
+    dischargeOfficer,
 } = require('../controllers/ticketController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
@@ -133,6 +135,26 @@ router.get(
     protect,
     authorize('admin', 'cm'),
     getStats
+);
+
+// @route   PUT /api/tickets/:id/status
+// @desc    Admin force-overrides a ticket's status
+// @access  Private (Admin)
+router.put(
+    '/:id/status',
+    protect,
+    authorize('admin'),
+    adminUpdateStatus
+);
+
+// @route   PUT /api/tickets/:id/discharge
+// @desc    Admin discharges officer from a ticket (unassign + reset Pending)
+// @access  Private (Admin)
+router.put(
+    '/:id/discharge',
+    protect,
+    authorize('admin'),
+    dischargeOfficer
 );
 
 module.exports = router;

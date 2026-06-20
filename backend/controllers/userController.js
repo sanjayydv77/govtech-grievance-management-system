@@ -96,9 +96,63 @@ const seedPrivilegedUser = async (req, res) => {
     }
 };
 
+// @desc    Admin creates an officer or admin account directly
+// @route   POST /api/users/create
+// @access  Private (Admin)
+const createUserByAdmin = async (req, res) => {
+    try {
+        const { name, email, password, phone, role, department } = req.body;
+
+        if (!name || !email || !password) {
+            return res.status(400).json({ error: 'Name, email, and password are required.' });
+        }
+
+        const allowedRoles = ['officer', 'admin', 'cm'];
+        if (!allowedRoles.includes(role)) {
+            return res.status(400).json({ error: `Role must be one of: ${allowedRoles.join(', ')}` });
+        }
+
+        if (role === 'officer' && !department) {
+            return res.status(400).json({ error: 'Department is required for officer accounts.' });
+        }
+
+        const existing = await User.findOne({ email: email.toLowerCase() });
+        if (existing) {
+            return res.status(409).json({ error: 'An account with this email already exists.' });
+        }
+
+        const salt = await bcrypt.genSalt(12);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        const user = await User.create({
+            name,
+            email: email.toLowerCase(),
+            password: hashedPassword,
+            phone: phone || '0000000000',
+            role,
+            department: department || null,
+        });
+
+        const userResponse = {
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            department: user.department,
+            phone: user.phone,
+        };
+
+        res.status(201).json({ message: `${role} account created successfully.`, user: userResponse });
+    } catch (error) {
+        console.error('CreateUserByAdmin Error:', error);
+        res.status(500).json({ error: 'Server error creating user account.' });
+    }
+};
+
 module.exports = {
     getOfficers,
     getAllUsers,
     deleteUser,
     seedPrivilegedUser,
+    createUserByAdmin,
 };

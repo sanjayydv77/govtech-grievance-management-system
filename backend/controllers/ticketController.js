@@ -293,6 +293,59 @@ const getStats = async (req, res) => {
     }
 };
 
+// ─────────────────────────────────────────────────────────────────
+// ADMIN — Force-override ticket status (bypass officer flow)
+// ─────────────────────────────────────────────────────────────────
+const adminUpdateStatus = async (req, res) => {
+    try {
+        const { status } = req.body;
+        const ticketId = req.params.id;
+
+        const validStatuses = ['Pending', 'Assigned', 'In Progress', 'Resolved', 'Rejected'];
+        if (!validStatuses.includes(status)) {
+            return res.status(400).json({ error: `Invalid status. Must be one of: ${validStatuses.join(', ')}` });
+        }
+
+        const ticket = await Ticket.findById(ticketId);
+        if (!ticket) return res.status(404).json({ error: 'Ticket not found' });
+
+        ticket.status = status;
+        await ticket.save();
+
+        const updated = await Ticket.findById(ticketId)
+            .populate('citizenId', 'name email phone')
+            .populate('assignedOfficerId', 'name department email');
+
+        res.status(200).json({ message: `Status updated to '${status}' by admin`, ticket: updated });
+    } catch (error) {
+        console.error('AdminUpdateStatus Error:', error);
+        res.status(500).json({ error: 'Server error updating ticket status' });
+    }
+};
+
+// ─────────────────────────────────────────────────────────────────
+// ADMIN — Discharge officer from a ticket (unassign + reset to Pending)
+// ─────────────────────────────────────────────────────────────────
+const dischargeOfficer = async (req, res) => {
+    try {
+        const ticket = await Ticket.findById(req.params.id);
+        if (!ticket) return res.status(404).json({ error: 'Ticket not found' });
+
+        if (!ticket.assignedOfficerId) {
+            return res.status(400).json({ error: 'No officer is currently assigned to this ticket' });
+        }
+
+        ticket.assignedOfficerId = null;
+        ticket.status = 'Pending'; // Reset so admin can reassign
+        await ticket.save();
+
+        res.status(200).json({ message: 'Officer discharged. Ticket reset to Pending.', ticket });
+    } catch (error) {
+        console.error('DischargeOfficer Error:', error);
+        res.status(500).json({ error: 'Server error discharging officer' });
+    }
+};
+
 module.exports = {
     createTicket,
     getCitizenTickets,
@@ -304,4 +357,6 @@ module.exports = {
     assignOfficer,
     addAdminFeedback,
     getStats,
+    adminUpdateStatus,
+    dischargeOfficer,
 };
