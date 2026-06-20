@@ -19,20 +19,27 @@ import GovBanner from './components/GovBanner';
 // ── Public (Shivan) ───────────────────────────────────────────
 import PublicDashboard from './pages/Public/PublicDashboard';
 
-// ── Placeholders (team members' dashboards — replace when merged) ─
-const PlaceholderPage = ({ emoji, title, desc }) => (
-    <div className="flex-1 bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
-        <div className="bg-white p-10 rounded-2xl shadow-lg border border-slate-200 text-center max-w-md">
-            <div className="text-6xl mb-5">{emoji}</div>
-            <h1 className="text-2xl font-bold text-slate-800 mb-2">{title}</h1>
-            <p className="text-slate-500 text-sm leading-relaxed">{desc}</p>
-            <div className="mt-6 inline-block bg-slate-100 text-slate-500 text-xs font-semibold px-4 py-2 rounded-full">Under Development by Team</div>
-        </div>
-    </div>
-);
+// ── Officer (Shubham) ──────────────────────────────────────────
+import OfficerLayout from './components/layout/OfficerLayout';
+import DashboardPage from './pages/Officer/DashboardPage';
+import ComplaintsManagementPage from './pages/Officer/ComplaintsManagementPage';
+import ComplaintDetailsPage from './pages/Officer/ComplaintDetailsPage';
+import HighPriorityPage from './pages/Officer/HighPriorityPage';
+import ReportsPage from './pages/Officer/ReportsPage';
+import NotificationsPage from './pages/Officer/NotificationsPage';
+import HistoryPage from './pages/Officer/HistoryPage';
+import SettingsPage from './pages/Officer/SettingsPage';
 
-const OfficerDashboard = () => <PlaceholderPage emoji="👮" title="Officer Dashboard" desc="Verify and resolve assigned complaints. Built by Shubham — coming soon." />;
-const CMDashboard      = () => <PlaceholderPage emoji="📊" title="CM Analytics Dashboard" desc="High-level monitoring and strategic overview of all portal activity." />;
+// ── CM (Shubham) ─────────────────────────────────────────────
+import CMLayout from './components/layout/CMLayout';
+import CMDashboardPage from './pages/CM/CMDashboardPage';
+import DistrictAnalyticsPage from './pages/CM/DistrictAnalyticsPage';
+import DepartmentPerformancePage from './pages/CM/DepartmentPerformancePage';
+import CriticalIssuesPage from './pages/CM/CriticalIssuesPage';
+import TrendsInsightsPage from './pages/CM/TrendsInsightsPage';
+import AccountabilityReportsPage from './pages/CM/AccountabilityReportsPage';
+import EscalationsPage from './pages/CM/EscalationsPage';
+import CMSettingsPage from './pages/CM/CMSettingsPage';
 
 // ── App ───────────────────────────────────────────────────────
 function App() {
@@ -53,24 +60,40 @@ function App() {
 
                             {/* ── Officer Dashboard ── */}
                             <Route element={<ProtectedRoute allowedRoles={['officer']} />}>
-                                <Route path="/dashboard/officer" element={<OfficerDashboard />} />
+                                <Route path="/dashboard/officer" element={<OfficerLayout />}>
+                                    <Route index element={<Navigate to="overview" replace />} />
+                                    <Route path="overview" element={<DashboardPage />} />
+                                    <Route path="complaints" element={<ComplaintsManagementPage />} />
+                                    <Route path="complaints/:id" element={<ComplaintDetailsPage />} />
+                                    <Route path="high-priority" element={<HighPriorityPage />} />
+                                    <Route path="reports" element={<ReportsPage />} />
+                                    <Route path="notifications" element={<NotificationsPage />} />
+                                    <Route path="history" element={<HistoryPage />} />
+                                    <Route path="settings" element={<SettingsPage />} />
+                                </Route>
                             </Route>
 
                             {/* ── CM Dashboard ── */}
                             <Route element={<ProtectedRoute allowedRoles={['cm']} />}>
-                                <Route path="/dashboard/cm" element={<CMDashboard />} />
+                                <Route path="/dashboard/cm" element={<CMLayout />}>
+                                    <Route index element={<Navigate to="overview" replace />} />
+                                    <Route path="overview" element={<CMDashboardPage />} />
+                                    <Route path="district-analytics" element={<DistrictAnalyticsPage />} />
+                                    <Route path="department-performance" element={<DepartmentPerformancePage />} />
+                                    <Route path="critical-issues" element={<CriticalIssuesPage />} />
+                                    <Route path="trends-insights" element={<TrendsInsightsPage />} />
+                                    <Route path="accountability-reports" element={<AccountabilityReportsPage />} />
+                                    <Route path="escalations" element={<EscalationsPage />} />
+                                    <Route path="settings" element={<CMSettingsPage />} />
+                                </Route>
                             </Route>
 
                             {/* ── Admin Dashboard (4 pages) ── */}
                             <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
                                 <Route path="/dashboard/admin" element={<AdminLayout />}>
-                                    {/* index = /dashboard/admin */}
                                     <Route index element={<AdminDashboard />} />
-                                    {/* /dashboard/admin/complaints */}
                                     <Route path="complaints" element={<AllComplaints />} />
-                                    {/* /dashboard/admin/officers */}
                                     <Route path="officers" element={<ManageOfficers />} />
-                                    {/* /dashboard/admin/users */}
                                     <Route path="users" element={<UserManagement />} />
                                 </Route>
                             </Route>
