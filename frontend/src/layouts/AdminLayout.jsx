@@ -68,7 +68,7 @@ const AdminLayout = () => {
         <div className="flex h-full flex-1 min-h-0 bg-slate-100 font-sans overflow-hidden">
 
             {/* ────── Sidebar ────── */}
-            <aside className="w-64 bg-gradient-to-b from-blue-900 to-purple-900 flex flex-col relative h-full shadow-2xl z-20 flex-shrink-0">
+            <aside className="w-64 bg-blue-900 flex flex-col relative h-full shadow-2xl z-20 flex-shrink-0">
 
                 {/* Logo / Brand */}
                 <div className="px-5 py-5 border-b border-slate-800/70">
@@ -94,19 +94,19 @@ const AdminLayout = () => {
                             className={({ isActive }) =>
                                 `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group ${
                                     isActive
-                                        ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/20'
+                                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
                                         : 'text-slate-400 hover:bg-slate-800 hover:text-slate-100'
                                 }`
                             }
                         >
                             {({ isActive }) => (
                                 <>
-                                    <span className={`flex-shrink-0 transition-colors ${isActive ? 'text-purple-200' : 'text-slate-500 group-hover:text-slate-300'}`}>
+                                    <span className={`flex-shrink-0 transition-colors ${isActive ? 'text-blue-200' : 'text-slate-500 group-hover:text-slate-300'}`}>
                                         <NavIcon />
                                     </span>
                                     <span className="flex-1 truncate">{name}</span>
                                     {isActive && (
-                                        <span className="text-purple-300 flex-shrink-0">
+                                        <span className="text-blue-300 flex-shrink-0">
                                             <Icon.ChevronRight />
                                         </span>
                                     )}
@@ -137,7 +137,7 @@ const AdminLayout = () => {
                             <p className="text-xs font-bold text-white truncate">{user?.name || 'Admin'}</p>
                             <p className="text-xs text-slate-400 truncate">{user?.email}</p>
                         </div>
-                        <span className="text-xs bg-purple-900/80 text-purple-200 px-1.5 py-0.5 rounded font-medium flex-shrink-0">ADMIN</span>
+                        <span className="text-xs bg-blue-900/80 text-blue-200 px-1.5 py-0.5 rounded font-medium flex-shrink-0">ADMIN</span>
                     </div>
                     <button
                         onClick={handleLogout}
