@@ -1,6 +1,11 @@
 const mongoose = require('mongoose');
 
 const ticketSchema = new mongoose.Schema({
+  ticketId: {
+    type: String,
+    unique: true,
+    required: true
+  },
   citizenId: { 
     type: mongoose.Schema.Types.ObjectId, 
     ref: 'User', 
@@ -20,7 +25,22 @@ const ticketSchema = new mongoose.Schema({
   },
   department: { 
     type: String, 
-    default: 'Pending AI Assignment' // The Round-Robin Gemini script will update this
+    enum: [
+      'Public Works Department (PWD)',
+      'Delhi Jal Board (DJB)',
+      'Transport Department',
+      'Health & Family Welfare',
+      'Education Directorate',
+      'Power (BSES/Tata Power)',
+      'Municipal Corporation of Delhi (MCD)',
+      'Revenue Department',
+      'Social Welfare',
+      'Environment & Forest',
+      'Women & Child Development',
+      'Food & Civil Supplies',
+      'Unclassified'
+    ],
+    default: 'Unclassified'
   },
   assignedOfficerId: { 
     type: mongoose.Schema.Types.ObjectId, 

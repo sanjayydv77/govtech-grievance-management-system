@@ -7,6 +7,14 @@ const extractMediaUrls = (files) => {
     return files.map(file => file.path);
 };
 
+// Helper to generate unique complaint IDs
+const generateTicketId = () => {
+    const date = new Date();
+    const dateStr = date.toISOString().slice(0, 10).replace(/-/g, ''); // YYYYMMDD
+    const randomHex = Math.floor(Math.random() * 0xFFFFF).toString(16).toUpperCase().padStart(5, '0');
+    return `DL-${dateStr}-${randomHex}`;
+};
+
 // ─────────────────────────────────────────────────────────────────
 // CITIZEN — Create a new ticket
 // ─────────────────────────────────────────────────────────────────
@@ -30,6 +38,7 @@ const createTicket = async (req, res) => {
         const citizenMedia = extractMediaUrls(req.files);
 
         const newTicket = new Ticket({
+            ticketId: generateTicketId(),
             citizenId: req.user._id, // Populated by real auth middleware
             title,
             description,

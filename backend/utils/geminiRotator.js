@@ -34,11 +34,12 @@ async function classifyComplaint(text) {
     const apiKey = getNextApiKey();
     const ai = new GoogleGenAI({ apiKey: apiKey });
 
-    const prompt = `You are a triage assistant for a government grievance portal. 
-Classify the following complaint into EXACTLY ONE department from this preset list: 
-['PWD', 'Delhi Jal Board', 'Health', 'Electricity'].
+    const prompt = `You are a triage assistant for the Delhi Chief Minister Grievance Portal. 
+Classify the following citizen complaint into EXACTLY ONE department from this preset list: 
+['Public Works Department (PWD)', 'Delhi Jal Board (DJB)', 'Transport Department', 'Health & Family Welfare', 'Education Directorate', 'Power (BSES/Tata Power)', 'Municipal Corporation of Delhi (MCD)', 'Revenue Department', 'Social Welfare', 'Environment & Forest', 'Women & Child Development', 'Food & Civil Supplies'].
 
-Return your answer strictly in valid JSON format like this: 
+If it doesn't clearly match any, return "Unclassified".
+Return your answer STRICTLY in valid JSON format like this: 
 {"department": "Chosen Department"}
 
 Complaint text: "${text}"`;
