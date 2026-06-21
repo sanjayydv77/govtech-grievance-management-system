@@ -225,7 +225,7 @@ const DashboardPage = () => {
                 <BarChart data={districtData} layout="vertical" margin={{ top: 0, right: 30, left: 10, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={true} stroke="#f1f5f9" />
                   <XAxis type="number" stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} />
-                  <YAxis dataKey="name" type="category" stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} width={80} />
+                  <YAxis dataKey="name" type="category" stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} width={115} />
                   <Tooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
                   <Bar dataKey="complaints" fill="#2563EB" radius={[0, 4, 4, 0]} barSize={12} />
                 </BarChart>
@@ -268,7 +268,7 @@ const DashboardPage = () => {
       <Card className="border-slate-100 shadow-sm rounded-2xl overflow-hidden">
         <CardHeader className="flex flex-row items-center justify-between bg-white border-b border-slate-50 py-5">
           <CardTitle className="text-base font-bold text-slate-800">Recent Assigned Complaints</CardTitle>
-          <Link to="/complaints">
+          <Link to="/dashboard/officer/complaints">
             <Button variant="outline" size="sm" className="text-blue-600 border-blue-200 hover:bg-blue-50 h-8 rounded-lg font-semibold px-4">
               View All &gt;
             </Button>
@@ -326,12 +326,12 @@ const DashboardPage = () => {
                   {/* Actions */}
                   <TableCell className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <Link to={`/complaints/${complaint.id}`}>
+                      <Link to={`/dashboard/officer/complaints/${complaint.id}`}>
                         <Button variant="outline" size="sm" className="h-8 px-3 rounded-lg border-blue-200 text-blue-600 hover:bg-blue-50 font-semibold text-xs">
                           View Details
                         </Button>
                       </Link>
-                      <Link to={`/complaints/${complaint.id}`}>
+                      <Link to={`/dashboard/officer/complaints/${complaint.id}`}>
                         <Button size="sm" className="h-8 px-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-sm">
                           Update Status
                         </Button>

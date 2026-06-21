@@ -11,6 +11,9 @@ const ticketSchema = new mongoose.Schema({
     ref: 'User', 
     required: true 
   },
+  citizenName: { type: String, default: null },
+  citizenPhone: { type: String, default: null },
+  citizenEmail: { type: String, default: null },
   title: { 
     type: String, 
     required: true 
@@ -49,7 +52,7 @@ const ticketSchema = new mongoose.Schema({
   },
   status: { 
     type: String, 
-    enum: ['Pending', 'Assigned', 'In Progress', 'Resolved', 'Rejected'], 
+    enum: ['Pending', 'Assigned', 'In Progress', 'Resolved', 'Rejected', 'Closed'], 
     default: 'Pending' 
   },
   verificationStatus: {
@@ -76,6 +79,11 @@ const ticketSchema = new mongoose.Schema({
   }],
   adminMessages: [{
     message: String,
+    timestamp: { type: Date, default: Date.now }
+  }],
+  officerRemarks: [{
+    remark: { type: String, required: true },
+    statusAtTime: { type: String, required: true },
     timestamp: { type: Date, default: Date.now }
   }]
 }, { timestamps: true });

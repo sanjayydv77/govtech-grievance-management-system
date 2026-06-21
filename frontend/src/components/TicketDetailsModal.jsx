@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { sendAdminFeedback } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 // ── Status badge helper ────────────────────────────────────────
 const StatusBadge = ({ status }) => {
@@ -27,9 +28,9 @@ const MediaGallery = ({ urls, label }) => {
                 {urls.map((url, i) => (
                     <a key={i} href={url} target="_blank" rel="noopener noreferrer">
                         <img
-                            src={url}
-                            alt={`${label} ${i + 1}`}
-                            className="h-28 w-44 object-cover rounded-lg shadow-sm border border-slate-200 hover:opacity-90 transition-opacity cursor-pointer flex-shrink-0"
+                             src={url}
+                             alt={`${label} ${i + 1}`}
+                             className="h-28 w-44 object-cover rounded-lg shadow-sm border border-slate-200 hover:opacity-90 transition-opacity cursor-pointer flex-shrink-0"
                         />
                     </a>
                 ))}
@@ -40,6 +41,7 @@ const MediaGallery = ({ urls, label }) => {
 
 // ── Main Modal ─────────────────────────────────────────────────
 const TicketDetailsModal = ({ ticket, onClose, onTicketUpdated }) => {
+    const { user } = useAuth();
     const [feedback, setFeedback] = useState('');
     const [sending, setSending] = useState(false);
     const [successMsg, setSuccessMsg] = useState('');
@@ -140,8 +142,9 @@ const TicketDetailsModal = ({ ticket, onClose, onTicketUpdated }) => {
                             </div>
                             <div>
                                 <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1">Citizen</p>
-                                <p className="text-slate-800 font-medium">{ticket.citizenId?.name || 'Anonymous'}</p>
-                                <p className="text-xs text-slate-400">{ticket.citizenId?.email}</p>
+                                <p className="text-slate-800 font-medium">{ticket.citizenName || ticket.citizenId?.name || 'Anonymous'}</p>
+                                <p className="text-xs text-slate-400">{ticket.citizenEmail || ticket.citizenId?.email}</p>
+                                <p className="text-xs text-slate-400">{ticket.citizenPhone || ticket.citizenId?.phone}</p>
                             </div>
                             <div>
                                 <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1">Assigned Officer</p>
@@ -174,11 +177,11 @@ const TicketDetailsModal = ({ ticket, onClose, onTicketUpdated }) => {
                             <MediaGallery urls={ticket.officerResolutionMedia} label="✅ Officer Resolution Media" />
                         </div>
 
-                        {/* Admin Messages History */}
+                        {/* Admin/CM Messages History */}
                         {ticket.adminMessages && ticket.adminMessages.length > 0 && (
                             <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
                                 <p className="text-xs font-semibold text-blue-700 uppercase tracking-widest mb-3">
-                                    💬 Admin Feedback History ({ticket.adminMessages.length})
+                                    💬 {user?.role === 'cm' ? 'CM Directives' : 'Admin Feedback'} History ({ticket.adminMessages.length})
                                 </p>
                                 <div className="space-y-2">
                                     {ticket.adminMessages.map((msg, idx) => (
@@ -194,16 +197,20 @@ const TicketDetailsModal = ({ ticket, onClose, onTicketUpdated }) => {
                         )}
                     </div>
 
-                    {/* Right column — Admin Actions */}
+                    {/* Right column — Admin/CM Actions */}
                     <div className="w-full lg:w-72 flex-shrink-0 flex flex-col gap-4">
                         <div className="bg-slate-50 rounded-xl p-5 border border-slate-200 flex flex-col gap-3 sticky top-0">
-                            <h3 className="text-sm font-bold text-slate-800">📨 Send Feedback to Officer</h3>
+                            <h3 className="text-sm font-bold text-slate-800">
+                                {user?.role === 'cm' ? '🏛 Issue CM Directive' : '📨 Send Feedback to Officer'}
+                            </h3>
                             <p className="text-xs text-slate-500">
-                                Message will be logged on the ticket and visible to the assigned officer.
+                                {user?.role === 'cm'
+                                    ? 'Direct order will be logged on the ticket and flagged to the department.'
+                                    : 'Message will be logged on the ticket and visible to the assigned officer.'}
                             </p>
                             <textarea
                                 className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none text-sm h-28"
-                                placeholder="Type your instruction or feedback..."
+                                placeholder={user?.role === 'cm' ? 'Type your executive order or directive...' : 'Type your instruction or feedback...'}
                                 value={feedback}
                                 onChange={(e) => setFeedback(e.target.value)}
                             />
@@ -221,13 +228,17 @@ const TicketDetailsModal = ({ ticket, onClose, onTicketUpdated }) => {
 
                             <button
                                 onClick={handleSendFeedback}
-                                disabled={sending || !feedback.trim() || !ticket.assignedOfficerId}
-                                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:cursor-not-allowed disabled:text-slate-400 text-white font-semibold py-2.5 rounded-lg transition-colors text-sm shadow-sm"
+                                disabled={sending || !feedback.trim() || (user?.role !== 'cm' && !ticket.assignedOfficerId)}
+                                className={`w-full text-white font-semibold py-2.5 rounded-lg transition-colors text-sm shadow-sm ${
+                                    user?.role === 'cm'
+                                        ? 'bg-amber-600 hover:bg-amber-700'
+                                        : 'bg-blue-600 hover:bg-blue-700'
+                                } disabled:bg-slate-200 disabled:cursor-not-allowed disabled:text-slate-400`}
                             >
-                                {sending ? 'Sending...' : 'Send Feedback'}
+                                {sending ? 'Sending...' : (user?.role === 'cm' ? 'Issue CM Directive' : 'Send Feedback')}
                             </button>
 
-                            {!ticket.assignedOfficerId && (
+                            {user?.role !== 'cm' && !ticket.assignedOfficerId && (
                                 <p className="text-xs text-amber-600 text-center">
                                     ⚠ Assign an officer first before sending feedback.
                                 </p>

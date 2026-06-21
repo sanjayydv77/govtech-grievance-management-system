@@ -1,8 +1,9 @@
 import React, { useEffect } from 'react';
-import { MapContainer, TileLayer, CircleMarker, Tooltip, useMap, Marker } from 'react-leaflet';
+import { MapContainer, TileLayer, GeoJSON, useMap, Marker } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useNavigate } from 'react-router-dom';
+import { delhiGeojson } from './delhiGeojson';
 
 const DELHI_CENTER = [28.6139, 77.2090];
 
@@ -16,7 +17,7 @@ const DISTRICT_COORDS = {
   'North West Delhi': [28.7333, 77.1167],
   'South East Delhi': [28.5667, 77.2500],
   'South West Delhi': [28.5833, 77.0500],
-  'Shahdara': [28.6800, 77.3000], // slightly adjusted to separate from East
+  'Shahdara': [28.6800, 77.3000],
   'New Delhi': [28.6139, 77.2090]
 };
 
@@ -32,26 +33,106 @@ const MapResizer = () => {
 };
 
 const getColorByVolume = (total) => {
-  if (total > 3000) return '#ef4444'; // Red (Critical)
-  if (total > 2000) return '#f97316'; // Orange (High)
-  if (total > 1000) return '#eab308'; // Yellow (Moderate)
-  return '#10b981'; // Green (Low)
-};
-
-const getRadiusByVolume = (total) => {
-  if (total > 3000) return 30;
-  if (total > 2000) return 25;
-  if (total > 1000) return 20;
-  return 15;
+  if (total > 10) return '#ef4444'; // Red (above 10)
+  if (total > 8) return '#f97316';  // Orange (8 to 10)
+  if (total > 5) return '#eab308';  // Yellow (5 to 8)
+  return '#10b981';                 // Green (0 to 5)
 };
 
 const DelhiHeatmap = ({ districtData }) => {
   const navigate = useNavigate();
 
   const handleDistrictClick = (districtName) => {
-    // Navigate to district analytics, potentially passing district name in state
-    navigate('/cm/district-analytics', { state: { selectedDistrict: districtName } });
+    // Navigate to district analytics, passing district name in state
+    navigate('/dashboard/cm/district-analytics', { state: { selectedDistrict: districtName } });
   };
+
+  const geoJsonStyle = (feature) => {
+    const districtName = feature.properties.Dist_Name;
+    const d = districtData.find(item => item.name === districtName) || { total: 0 };
+    const color = getColorByVolume(d.total);
+    return {
+      fillColor: color,
+      fillOpacity: 0.45,
+      color: '#475569', // slate-600 border
+      weight: 1.5,
+      opacity: 0.8
+    };
+  };
+
+  const onEachFeature = (feature, layer) => {
+    const districtName = feature.properties.Dist_Name;
+    const d = districtData.find(item => item.name === districtName) || {
+      name: districtName,
+      total: 0,
+      resolved: 0,
+      critical: 0,
+      resolutionRate: 0
+    };
+
+    // Bind clean custom tooltip
+    layer.bindTooltip(
+      `<div class="min-w-[200px] bg-white rounded-lg overflow-hidden shadow-xl border border-slate-200">
+        <div class="bg-slate-100 px-4 py-2 border-b border-slate-200 font-bold text-sm tracking-wide text-slate-800 text-center">
+          ${d.name}
+        </div>
+        <div class="p-4 space-y-2 text-left">
+          <div class="flex justify-between items-center">
+            <span class="text-slate-500 text-xs uppercase font-bold">Total Complaints</span>
+            <span class="text-slate-900 font-black">${d.total}</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-slate-500 text-xs uppercase font-bold">Pending</span>
+            <span class="text-amber-500 font-black">${d.total - d.resolved}</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-slate-500 text-xs uppercase font-bold">Resolved</span>
+            <span class="text-emerald-500 font-black">${d.resolved}</span>
+          </div>
+          <div class="flex justify-between items-center pt-2 border-t border-slate-100">
+            <span class="text-slate-500 text-xs uppercase font-bold">Resolution Rate</span>
+            <span class="text-blue-500 font-black">${d.resolutionRate}%</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-slate-500 text-xs uppercase font-bold">Critical Issues</span>
+            <span class="text-red-500 font-black">${d.critical}</span>
+          </div>
+        </div>
+      </div>`,
+      {
+        direction: 'top',
+        sticky: true,
+        opacity: 1,
+        className: 'custom-geojson-tooltip'
+      }
+    );
+
+    layer.on({
+      mouseover: (e) => {
+        const l = e.target;
+        l.setStyle({
+          fillOpacity: 0.7,
+          weight: 2.5,
+          color: '#0f172a'
+        });
+        l.bringToFront();
+      },
+      mouseout: (e) => {
+        const l = e.target;
+        l.setStyle({
+          fillOpacity: 0.45,
+          weight: 1.5,
+          color: '#475569'
+        });
+      },
+      click: () => {
+        handleDistrictClick(d.name);
+      }
+    });
+  };
+
+  // Generate a key based on districtData to force GeoJSON re-render on data updates
+  const geojsonKey = districtData.map(d => `${d.name}:${d.total}`).join(',');
 
   return (
     <div className="absolute inset-0 rounded-b-lg overflow-hidden bg-slate-50 z-0 border border-slate-200">
@@ -60,12 +141,12 @@ const DelhiHeatmap = ({ districtData }) => {
         zoom={11} 
         scrollWheelZoom={false}
         className="w-full h-full"
-        style={{ background: '#f8fafc', zIndex: 0 }} // Tailwind slate-50
+        style={{ background: '#f8fafc', zIndex: 0 }}
         minZoom={10}
         maxZoom={14}
         maxBounds={[
-          [28.40, 76.83], // South West
-          [28.88, 77.34]  // North East
+          [28.40, 76.83],
+          [28.88, 77.34]
         ]}
         maxBoundsViscosity={1.0}
       >
@@ -77,75 +158,31 @@ const DelhiHeatmap = ({ districtData }) => {
           url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
         />
 
+        {/* Shaded boundaries of districts */}
+        <GeoJSON
+          key={geojsonKey}
+          data={delhiGeojson}
+          style={geoJsonStyle}
+          onEachFeature={onEachFeature}
+        />
+
+        {/* Permanent Text Labels placed at the center of each district */}
         {districtData.map((d, i) => {
           const coords = DISTRICT_COORDS[d.name];
-          if (!coords) return null; // Skip if no coords mapped
-          
-          const color = getColorByVolume(d.total);
+          if (!coords) return null;
           
           return (
-            <React.Fragment key={i}>
-              <CircleMarker
-                center={coords}
-                radius={getRadiusByVolume(d.total)}
-                pathOptions={{
-                  color: color,
-                  fillColor: color,
-                  fillOpacity: 0.6,
-                  weight: 2
-                }}
-                eventHandlers={{
-                  click: () => handleDistrictClick(d.name),
-                }}
-              >
-                <Tooltip 
-                  className="custom-tooltip border-0 p-0 rounded-lg shadow-xl overflow-hidden"
-                  direction="top"
-                  offset={[0, -10]}
-                  opacity={1}
-                >
-                  <div className="min-w-[200px] bg-white rounded-lg overflow-hidden">
-                    <div className="bg-slate-100 px-4 py-2 border-b border-slate-200 font-bold text-sm tracking-wide text-slate-800 text-center">
-                      {d.name}
-                    </div>
-                    <div className="p-4 space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-slate-500 text-xs uppercase font-bold">Total Complaints</span>
-                        <span className="text-slate-900 font-black">{d.total}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-slate-500 text-xs uppercase font-bold">Pending</span>
-                        <span className="text-amber-500 font-black">{d.total - d.resolved}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-slate-500 text-xs uppercase font-bold">Resolved</span>
-                        <span className="text-emerald-500 font-black">{d.resolved}</span>
-                      </div>
-                      <div className="flex justify-between items-center pt-2 border-t border-slate-100">
-                        <span className="text-slate-500 text-xs uppercase font-bold">Resolution Rate</span>
-                        <span className="text-blue-500 font-black">{d.resolutionRate}%</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-slate-500 text-xs uppercase font-bold">Critical Issues</span>
-                        <span className="text-red-500 font-black">{d.critical}</span>
-                      </div>
-                    </div>
-                  </div>
-                </Tooltip>
-              </CircleMarker>
-              
-              {/* Permanent Text Label below the bubble */}
-              <Marker 
-                position={coords} 
-                interactive={false}
-                icon={L.divIcon({
-                  className: 'district-label-icon',
-                  html: `<div style="font-weight: 800; color: #1e293b; font-size: 11px; text-shadow: 2px 2px 0px #fff, -2px -2px 0px #fff, 2px -2px 0px #fff, -2px 2px 0px #fff; white-space: nowrap; text-align: center;">${d.name}</div>`,
-                  iconSize: [100, 20],
-                  iconAnchor: [50, -18] // Offset downward
-                })}
-              />
-            </React.Fragment>
+            <Marker 
+              key={`label-${i}`}
+              position={coords} 
+              interactive={false}
+              icon={L.divIcon({
+                className: 'district-label-icon',
+                html: `<div style="font-weight: 800; color: #0f172a; font-size: 11px; text-shadow: 2px 2px 0px #fff, -2px -2px 0px #fff, 2px -2px 0px #fff, -2px 2px 0px #fff; white-space: nowrap; text-align: center;">${d.name}</div>`,
+                iconSize: [100, 20],
+                iconAnchor: [50, 10]
+              })}
+            />
           );
         })}
       </MapContainer>
@@ -154,10 +191,22 @@ const DelhiHeatmap = ({ districtData }) => {
       <div className="absolute bottom-4 left-4 z-[400] bg-white/90 backdrop-blur-sm border border-slate-200 p-3 rounded-lg shadow-lg">
         <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mb-2">Complaint Volume</p>
         <div className="space-y-1.5">
-          <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-red-500"></span><span className="text-xs text-slate-700 font-medium">Critical</span></div>
-          <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-orange-500"></span><span className="text-xs text-slate-700 font-medium">High</span></div>
-          <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-yellow-500"></span><span className="text-xs text-slate-700 font-medium">Moderate</span></div>
-          <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-emerald-500"></span><span className="text-xs text-slate-700 font-medium">Low</span></div>
+          <div className="flex items-center gap-2">
+            <span className="w-3 h-3 rounded-full bg-[#ef4444]"></span>
+            <span className="text-xs text-slate-700 font-medium">Critical (&gt; 10)</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-3 h-3 rounded-full bg-[#f97316]"></span>
+            <span className="text-xs text-slate-700 font-medium">High (8 - 10)</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-3 h-3 rounded-full bg-[#eab308]"></span>
+            <span className="text-xs text-slate-700 font-medium">Moderate (5 - 8)</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-3 h-3 rounded-full bg-[#10b981]"></span>
+            <span className="text-xs text-slate-700 font-medium">Low (0 - 5)</span>
+          </div>
         </div>
       </div>
       

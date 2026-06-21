@@ -50,10 +50,10 @@ const AdminDashboard = () => {
     useEffect(() => {
         const load = async () => {
             try {
-                const [s, t, o] = await Promise.all([fetchStats(), fetchAllTickets(), fetchOfficers()]);
-                setStats(s);
-                setTickets(t);
-                setOfficers(o);
+                const [s, t, o] = await Promise.allSettled([fetchStats(), fetchAllTickets(), fetchOfficers()]);
+                setStats(s.status === 'fulfilled' ? s.value : null);
+                setTickets(t.status === 'fulfilled' ? t.value : []);
+                setOfficers(o.status === 'fulfilled' ? o.value : []);
             } catch (e) { console.error('Overview load error:', e); }
             finally { setLoading(false); }
         };

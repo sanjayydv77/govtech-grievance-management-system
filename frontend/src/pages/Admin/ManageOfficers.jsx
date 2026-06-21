@@ -171,7 +171,7 @@ const OfficerModal = ({ officerData, allTickets, allOfficers, onClose, onTickets
                                                 <StatusBadge status={ticket.status} />
                                             </div>
                                             <p className="text-xs text-slate-500 truncate">{ticket.location} · {ticket.department}</p>
-                                            <p className="text-xs text-slate-300 font-mono mt-0.5">#{ticket._id.slice(-8).toUpperCase()}</p>
+                                            <p className="text-xs text-slate-400 font-mono mt-0.5">{ticket.ticketId}</p>
                                         </div>
 
                                         {/* Action buttons */}

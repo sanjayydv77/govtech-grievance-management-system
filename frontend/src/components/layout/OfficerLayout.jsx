@@ -2,24 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, FileText, Flag, BarChart2, Bell, Settings, LogOut, Shield, Menu, Building2, Archive, CheckCircle2 } from 'lucide-react';
 import { notificationService } from '../../services/notificationService';
+import { useAuth } from '../../context/AuthContext';
 
 
 
 const OfficerLayout = () => {
+  const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const [officer, setOfficer] = useState(null);
 
   const [notifications, setNotifications] = useState([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   useEffect(() => {
-    // Load officer session
-    const sessionStr = localStorage.getItem('officerSession');
-    if (sessionStr) {
-      setOfficer(JSON.parse(sessionStr));
-    }
-
     const fetchNotifications = async () => {
       try {
         const data = await notificationService.getNotifications();
@@ -51,18 +46,18 @@ const OfficerLayout = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('officerSession');
-    navigate('/login');
+    logout();
+    navigate('/');
   };
 
   const navItems = [
-    { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-    { name: 'Assigned Complaints', path: '/complaints', icon: FileText },
-    { name: 'High Priority', path: '/high-priority', icon: Flag },
-    { name: 'Reports', path: '/reports', icon: BarChart2 },
-    { name: 'Notifications', path: '/notifications', icon: Bell, badge: unreadNotifications.length > 0 ? unreadNotifications.length : null },
-    { name: 'History', path: '/history', icon: Archive },
-    { name: 'Settings', path: '/settings', icon: Settings },
+    { name: 'Dashboard', path: '/dashboard/officer/overview', icon: LayoutDashboard },
+    { name: 'Assigned Complaints', path: '/dashboard/officer/complaints', icon: FileText },
+    { name: 'High Priority', path: '/dashboard/officer/high-priority', icon: Flag },
+    { name: 'Reports', path: '/dashboard/officer/reports', icon: BarChart2 },
+    { name: 'Notifications', path: '/dashboard/officer/notifications', icon: Bell, badge: unreadNotifications.length > 0 ? unreadNotifications.length : null },
+    { name: 'History', path: '/dashboard/officer/history', icon: Archive },
+    { name: 'Settings', path: '/dashboard/officer/settings', icon: Settings },
   ];
 
   return (
@@ -84,7 +79,7 @@ const OfficerLayout = () => {
         {/* Navigation */}
         <nav className="flex-1 px-4 py-4 space-y-1.5 relative z-10">
           {navItems.map((item) => {
-            const isActive = location.pathname.startsWith(item.path) || (item.path === '/dashboard' && location.pathname === '/');
+            const isActive = location.pathname.startsWith(item.path);
             return (
               <Link
                 key={item.name}
@@ -137,16 +132,16 @@ const OfficerLayout = () => {
             </button>
             <div>
               <h2 className="text-2xl font-bold text-slate-800">Officer Dashboard</h2>
-              <p className="text-sm text-slate-500 mt-0.5">Welcome back, {officer?.name || 'Officer'}! Here's what's happening today.</p>
+              <p className="text-sm text-slate-500 mt-0.5">Welcome back, {user?.name || 'Officer'}! Here's what's happening today.</p>
             </div>
           </div>
 
           <div className="flex items-center gap-6">
             {/* Department Indicator */}
-            {officer && (
+            {user && (
               <div className="hidden md:flex items-center gap-2 bg-slate-50 border px-4 py-2 rounded-xl text-sm font-medium text-slate-700">
                 <Building2 size={16} className="text-slate-400" />
-                {officer.department}
+                {user.department}
               </div>
             )}
             
@@ -221,15 +216,15 @@ const OfficerLayout = () => {
             </div>
             
             {/* User Profile Block */}
-            {officer && (
+            {user && (
               <div className="flex items-center gap-3 pl-6 border-l border-slate-200">
                 <img 
-                  src={officer.avatar} 
-                  alt={officer.name} 
+                  src={user.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80'} 
+                  alt={user.name} 
                   className="w-10 h-10 rounded-full border-2 border-white shadow-sm bg-slate-100"
                 />
                 <div className="hidden xl:block">
-                  <p className="text-sm font-bold text-slate-800 leading-none">{officer.name}</p>
+                  <p className="text-sm font-bold text-slate-800 leading-none">{user.name}</p>
                   <p className="text-xs text-slate-500 mt-1">Assistant Engineer</p>
                 </div>
               </div>

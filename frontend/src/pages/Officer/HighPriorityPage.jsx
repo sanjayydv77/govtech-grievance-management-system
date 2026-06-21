@@ -238,12 +238,12 @@ const HighPriorityPage = () => {
 
                         <TableCell className="px-6 py-4 text-right">
                           <div className="flex items-center justify-end gap-2">
-                            <Link to={`/complaints/${ticket.id}`}>
+                            <Link to={`/dashboard/officer/complaints/${ticket.id}`}>
                               <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-400 hover:text-blue-600 hover:bg-blue-50">
                                 <FileText className="w-4 h-4" />
                               </Button>
                             </Link>
-                            <Link to={`/complaints/${ticket.id}`}>
+                            <Link to={`/dashboard/officer/complaints/${ticket.id}`}>
                               <Button size="sm" className="h-8 px-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-sm">
                                 Take Action
                               </Button>

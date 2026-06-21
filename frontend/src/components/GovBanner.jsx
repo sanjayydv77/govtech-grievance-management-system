@@ -33,7 +33,6 @@ const GovBanner = () => {
                     <button onClick={() => changeFontSize(-1)} className="hover:underline focus:outline-none focus:ring-2 focus:ring-white rounded px-1" title="Decrease Font Size">A-</button>
                     <button onClick={() => changeFontSize(0)} className="hover:underline focus:outline-none focus:ring-2 focus:ring-white rounded px-1" title="Normal Font Size">A</button>
                     <button onClick={() => changeFontSize(1)} className="hover:underline focus:outline-none focus:ring-2 focus:ring-white rounded px-1" title="Increase Font Size">A+</button>
-                    <div id="google_translate_element" className="inline-block transform translate-y-1 ml-2"></div>
                 </div>
             </div>
 

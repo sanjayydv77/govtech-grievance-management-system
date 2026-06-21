@@ -14,8 +14,16 @@ const {
     getStats,
     adminUpdateStatus,
     dischargeOfficer,
+    getTicketById,
+    officerUpdateStatus,
+    getTicketByPublicId,
 } = require('../controllers/ticketController');
 const { protect, authorize } = require('../middleware/authMiddleware');
+
+// @route   GET /api/tickets/track/:ticketId
+// @desc    Get non-sensitive ticket status details by ticketId
+// @access  Public (Guest/Citizen)
+router.get('/track/:ticketId', getTicketByPublicId);
 
 // ─────────────────────────────────────────────────────────────────
 // CITIZEN ROUTES
@@ -89,6 +97,17 @@ router.put(
     resolveTicket
 );
 
+// @route   PUT /api/tickets/:id/officer-status
+// @desc    Officer updates ticket to any status + uploads media + remark
+// @access  Private (Officer)
+router.put(
+    '/:id/officer-status',
+    protect,
+    authorize('officer'),
+    upload.array('media', 5),
+    officerUpdateStatus
+);
+
 // ─────────────────────────────────────────────────────────────────
 // ADMIN ROUTES
 // ─────────────────────────────────────────────────────────────────
@@ -115,11 +134,11 @@ router.put(
 
 // @route   PUT /api/tickets/:id/feedback
 // @desc    Admin adds feedback/message to a ticket
-// @access  Private (Admin)
+// @access  Private (Admin, CM)
 router.put(
     '/:id/feedback',
     protect,
-    authorize('admin'),
+    authorize('admin', 'cm'),
     addAdminFeedback
 );
 
@@ -155,6 +174,15 @@ router.put(
     protect,
     authorize('admin'),
     dischargeOfficer
+);
+
+// @route   GET /api/tickets/:id
+// @desc    Get single ticket details by MongoDB ID
+// @access  Private (Any authenticated user)
+router.get(
+    '/:id',
+    protect,
+    getTicketById
 );
 
 module.exports = router;

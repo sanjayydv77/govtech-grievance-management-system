@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './PublicDashboard.css';
+import { createTicket, fetchCitizenTickets, trackTicketPublicly } from '../../services/api';
 
 // Translation Dictionary for English and Hindi
 const TRANSLATIONS = {
@@ -230,7 +231,7 @@ export default function PublicDashboard() {
   const [theme, setTheme] = useState('light'); // 'light' or 'dark'
 
   // Submission Form State
-  const [currentStep, setCurrentStep] = useState(2); // Start on Step 2 like Figma prototype
+  const [currentStep, setCurrentStep] = useState(1);
   const [citizenDetails, setCitizenDetails] = useState({
     fullName: '',
     email: '',
@@ -246,28 +247,16 @@ export default function PublicDashboard() {
 
   const [errors, setErrors] = useState({});
 
-  // Pre-populate mock files from Figma mockup by default, but allow actual additions
-  const [uploadedFiles, setUploadedFiles] = useState([
-    {
-      id: 'mock-1',
-      name: 'image_street.jpg',
-      size: '3.2 MB',
-      description: 'Pothole at Sector 7 road.',
-      type: 'image',
-      url: 'https://images.unsplash.com/photo-1515162305285-0293e4767cc2?auto=format&fit=crop&w=300&q=80',
-    },
-    {
-      id: 'mock-2',
-      name: 'video_water.mp4',
-      size: '18.1 MB',
-      description: 'Leaking pipe since Monday.',
-      type: 'video',
-      url: '',
-    }
-  ]);
+  const [uploadedFiles, setUploadedFiles] = useState([]);
 
   const [newFileNote, setNewFileNote] = useState('');
   const fileInputRef = useRef(null);
+
+  // Refs for smooth scrolling to form sections
+  const step1Ref = useRef(null);
+  const step2Ref = useRef(null);
+  const step3Ref = useRef(null);
+  const step4Ref = useRef(null);
 
   // Tracking State
   const [searchToken, setSearchToken] = useState('DGP123456'); // pre-fill DGP123456 as shown in design
@@ -364,10 +353,19 @@ export default function PublicDashboard() {
   };
 
   const handleStepTransition = (nextStep) => {
-    if (nextStep > currentStep) {
-      if (!validateStep(currentStep)) return;
-    }
     setCurrentStep(nextStep);
+    const refs = {
+      1: step1Ref,
+      2: step2Ref,
+      3: step3Ref,
+      4: step4Ref
+    };
+    const targetRef = refs[nextStep];
+    if (targetRef && targetRef.current) {
+      setTimeout(() => {
+        targetRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 50);
+    }
   };
 
   // GPS Geolocation Detector
@@ -412,7 +410,14 @@ export default function PublicDashboard() {
 
   // Submit Grievance Submission
   const handleSubmitGrievance = async () => {
-    if (!validateStep(1) || !validateStep(2)) {
+    const isStep1Valid = validateStep(1);
+    const isStep2Valid = validateStep(2);
+    if (!isStep1Valid || !isStep2Valid) {
+      if (!isStep1Valid) {
+        handleStepTransition(1);
+      } else {
+        handleStepTransition(2);
+      }
       alert(language === 'en' ? 'Please check form details in all steps for missing/invalid information.' : 'कृपया अमान्य या छूटी हुई जानकारी के लिए सभी चरणों में फॉर्म विवरण देखें।');
       return;
     }
@@ -432,7 +437,7 @@ export default function PublicDashboard() {
 
     uploadedFiles.forEach((f, idx) => {
       if (f.file) {
-        formData.append(`media_${idx}`, f.file);
+        formData.append('media', f.file);
       } else {
         formData.append(`mock_media_${idx}_name`, f.name);
         formData.append(`mock_media_${idx}_description`, f.description);
@@ -440,48 +445,61 @@ export default function PublicDashboard() {
     });
 
     try {
-      const response = await fetch('/api/tickets/create', {
-        method: 'POST',
-        body: formData,
-      });
-
-      const data = await response.json().catch(() => ({}));
-      const tokenNo = data.ticketId || data.id || `DGP${Math.floor(100000 + Math.random() * 900000)}`;
+      const response = await createTicket(formData);
+      const data = response || {};
+      const tokenNo = data.ticket?.ticketId || data.ticketId || data.id || `DGP${Math.floor(100000 + Math.random() * 900000)}`;
       
       setGeneratedToken(tokenNo);
       setSubmitSuccess(true);
       setShowEmailSimulator(true);
     } catch (error) {
       console.error('Error submitting complaint:', error);
-      const fallbackToken = `DGP${Math.floor(100000 + Math.random() * 900000)}`;
-      setGeneratedToken(fallbackToken);
-      setSubmitSuccess(true);
-      setShowEmailSimulator(true);
+      alert(language === 'en' ? 'Error submitting complaint. Please try again.' : 'शिकायत दर्ज करने में त्रुटि। कृपया पुनः प्रयास करें।');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleTrackSearch = (e) => {
+  const handleTrackSearch = async (e) => {
     e.preventDefault();
     setTrackingError('');
     const tokenClean = searchToken.trim().toUpperCase();
     
-    if (MOCK_TICKETS[tokenClean]) {
-      setSearchedTicket(MOCK_TICKETS[tokenClean]);
-    } else if (tokenClean === generatedToken) {
-      setSearchedTicket({
-        token: generatedToken,
-        title: `${grievanceDetails.category || 'General'} Grievance`,
-        category: grievanceDetails.category || 'General',
-        status: 'REGISTERED',
-        department: language === 'en' ? 'Nodal Cell (Grievance Department)' : 'नोडल सेल (शिकायत प्रकोष्ठ)',
-        area: grievanceDetails.area || 'Delhi Region',
-        date: new Date().toISOString().split('T')[0],
-      });
-    } else {
-      setSearchedTicket(null);
-      setTrackingError(TRANSLATIONS[language].invalidTokenErr);
+    try {
+      const found = await trackTicketPublicly(tokenClean);
+      
+      if (found) {
+        setSearchedTicket({
+          token: found.ticketId,
+          title: found.title,
+          category: found.category || found.department || 'General',
+          status: found.status,
+          department: found.department || (language === 'en' ? 'Nodal Cell' : 'नोडल सेल'),
+          area: found.location || found.area || 'Delhi',
+          date: found.createdAt ? new Date(found.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        });
+      } else if (tokenClean === generatedToken) {
+        setSearchedTicket({
+          token: generatedToken,
+          title: `${grievanceDetails.category || 'General'} Grievance`,
+          category: grievanceDetails.category || 'General',
+          status: 'REGISTERED',
+          department: language === 'en' ? 'Nodal Cell (Grievance Department)' : 'नोडल सेल (शिकायत प्रकोष्ठ)',
+          area: grievanceDetails.area || 'Delhi Region',
+          date: new Date().toISOString().split('T')[0],
+        });
+      } else {
+        setSearchedTicket(null);
+        setTrackingError(TRANSLATIONS[language].invalidTokenErr);
+      }
+    } catch (err) {
+      console.error('Error fetching tracking data:', err);
+      if (err.response?.status === 404) {
+        setSearchedTicket(null);
+        setTrackingError(TRANSLATIONS[language].invalidTokenErr);
+      } else {
+        setTrackingError("Error connecting to tracking service.");
+      }
     }
   };
 
@@ -494,45 +512,36 @@ export default function PublicDashboard() {
     setShowEmailSimulator(false);
   };
 
+  const getStageClass = (stageName) => {
+    if (!searchedTicket) return '';
+    const status = searchedTicket.status; // Pending, Assigned, In Progress, Resolved, Closed, Rejected
+
+    if (stageName === 'registered') {
+      return 'completed';
+    }
+    if (stageName === 'assigned') {
+      if (status === 'Assigned') return 'active';
+      if (['In Progress', 'Resolved', 'Closed', 'Rejected'].includes(status)) return 'completed';
+    }
+    if (stageName === 'in_progress') {
+      if (status === 'In Progress') return 'active';
+      if (['Resolved', 'Closed'].includes(status)) return 'completed';
+    }
+    if (stageName === 'resolved') {
+      if (['Resolved', 'Closed'].includes(status)) return 'completed';
+    }
+    if (stageName === 'rejected') {
+      if (status === 'Rejected') return 'rejected';
+    }
+    return '';
+  };
+
   const t = TRANSLATIONS[language];
 
   return (
     <div className={`portal-container ${theme}-theme`}>
       {/* Header bar */}
       <header className="gov-header-wrapper">
-        {/* Main White Branding Banner */}
-        <div className="gov-main-branding-bar">
-          <div className="brand-logo-title-group">
-            <div className="emblem-container">
-              <svg width="50" height="70" viewBox="0 0 120 180" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M60 10C50 10 42 20 42 35C42 45 48 55 52 65C45 65 38 72 38 80C38 88 43 92 48 95C42 100 40 106 40 115C40 125 50 135 60 135C70 135 80 125 80 115C80 106 78 100 72 95C77 92 82 88 82 80C82 72 75 65 68 65C72 55 78 45 78 35C78 20 70 10 60 10Z" fill="#374151" />
-                <rect x="30" y="135" width="60" height="12" rx="3" fill="#4B5563" />
-                <circle cx="60" cy="141" r="5" fill="#ffffff" />
-                <path d="M50 152H70M45 158H75M55 164H65" stroke="#374151" strokeWidth="3" strokeLinecap="round" />
-                <text x="60" y="176" fill="#374151" fontSize="9" fontWeight="bold" textAnchor="middle" fontFamily="sans-serif">सत्यमेव जयते</text>
-              </svg>
-            </div>
-            
-            <div className="gov-titles-wrapper">
-              <h1 className="gov-text-en">Government of National Capital Territory of Delhi</h1>
-              <h2 className="gov-text-hi">राष्ट्रीय राजधानी क्षेत्र दिल्ली सरकार</h2>
-            </div>
-          </div>
-
-          {/* Indian flag in the center */}
-          <div className="indian-flag-container">
-            <div className="flag-stripe saffron"></div>
-            <div className="flag-stripe white">
-              <div className="chakra-wheel"></div>
-            </div>
-            <div className="flag-stripe green"></div>
-          </div>
-
-          <div className="branding-right-logos">
-            <img src="/collage.png" alt="Delhi Leadership" className="gov-header-img" title={t.delhiSamadhan} />
-          </div>
-        </div>
-
         {/* Tab Navigation Section */}
         <div className="gov-tab-nav-bar">
           <div className="nav-tabs-left">
@@ -564,18 +573,6 @@ export default function PublicDashboard() {
           </div>
 
           <div className="nav-actions-right">
-            {/* Language selector */}
-            <div className="utility-lang-dropdown">
-              <select 
-                value={language} 
-                onChange={(e) => setLanguage(e.target.value)}
-                className="utility-lang-select"
-              >
-                <option value="en">English</option>
-                <option value="hi">हिन्दी</option>
-              </select>
-            </div>
-
             {/* Theme Toggle Button */}
             <button onClick={toggleTheme} className="utility-theme-toggle">
               {theme === 'light' ? (
@@ -689,7 +686,7 @@ export default function PublicDashboard() {
                 </div>
 
                 {/* STEP 1 ACCORDION / SECTION */}
-                <div className={`accordion-section ${currentStep === 1 ? 'expanded' : 'collapsed'}`}>
+                <div ref={step1Ref} className={`accordion-section ${currentStep === 1 ? 'expanded' : 'collapsed'}`}>
                   <button onClick={() => handleStepTransition(1)} className="accordion-toggle">
                     <span>1. {t.step1}</span>
                     <span className="toggle-chevron"></span>
@@ -738,20 +735,19 @@ export default function PublicDashboard() {
                         {errors.phone && <span className="gov-error-lbl">{errors.phone}</span>}
                       </div>
                     </div>
-                    <button onClick={() => handleStepTransition(2)} className="btn-primary mt-4">{t.nextStep}</button>
                   </div>
                 </div>
 
                 {/* STEP 2 ACCORDION / SECTION */}
-                <div className={`accordion-section ${currentStep === 2 ? 'expanded' : 'collapsed'}`}>
+                <div ref={step2Ref} className={`accordion-section ${currentStep === 2 ? 'expanded' : 'collapsed'}`}>
                   <button onClick={() => handleStepTransition(2)} className="accordion-toggle">
                     <span>2. {t.step2}</span>
                     <span className="toggle-chevron"></span>
                   </button>
                   
                   <div className="accordion-content">
-                    <div className="form-left-col-full">
-                      <div className="form-section-title">2. {t.step2}</div>
+                    <div className="form-grid">
+                      <div className="form-section-title col-span-2">2. {t.step2}</div>
                       
                       <div className="input-group">
                         <label className="required">{t.category}</label>
@@ -774,6 +770,21 @@ export default function PublicDashboard() {
                       </div>
 
                       <div className="input-group">
+                        <label className="required">{t.area}</label>
+                        <input 
+                          type="text" 
+                          placeholder={t.areaPlaceholder}
+                          value={grievanceDetails.area}
+                          onChange={(e) => {
+                            setGrievanceDetails({...grievanceDetails, area: e.target.value});
+                            if (errors.area) setErrors({...errors, area: ''});
+                          }}
+                          className={errors.area ? 'gov-input-invalid' : ''}
+                        />
+                        {errors.area && <span className="gov-error-lbl">{errors.area}</span>}
+                      </div>
+
+                      <div className="input-group col-span-2">
                         <label className="required">{t.description}</label>
                         <textarea 
                           rows="4" 
@@ -789,22 +800,7 @@ export default function PublicDashboard() {
                         {errors.description && <span className="gov-error-lbl">{errors.description}</span>}
                       </div>
 
-                      <div className="input-group">
-                        <label className="required">{t.area}</label>
-                        <input 
-                          type="text" 
-                          placeholder={t.areaPlaceholder}
-                          value={grievanceDetails.area}
-                          onChange={(e) => {
-                            setGrievanceDetails({...grievanceDetails, area: e.target.value});
-                            if (errors.area) setErrors({...errors, area: ''});
-                          }}
-                          className={errors.area ? 'gov-input-invalid' : ''}
-                        />
-                        {errors.area && <span className="gov-error-lbl">{errors.area}</span>}
-                      </div>
-
-                      <div className="input-group">
+                      <div className="input-group col-span-2">
                         <label className="required">{t.location}</label>
                         <div className="location-input-group" style={{ display: 'flex', gap: '8px' }}>
                           <input 
@@ -839,17 +835,12 @@ export default function PublicDashboard() {
                         </div>
                         {errors.location && <span className="gov-error-lbl">{errors.location}</span>}
                       </div>
-
-                      <div className="step-actions-desktop">
-                        <button onClick={() => handleStepTransition(1)} className="btn-secondary">{t.backBtn}</button>
-                        <button onClick={() => handleStepTransition(3)} className="btn-primary">{t.nextStep}</button>
-                      </div>
                     </div>
                   </div>
                 </div>
 
                 {/* STEP 3 ACCORDION / SECTION */}
-                <div className={`accordion-section ${currentStep === 3 ? 'expanded' : 'collapsed'}`}>
+                <div ref={step3Ref} className={`accordion-section ${currentStep === 3 ? 'expanded' : 'collapsed'}`}>
                   <button onClick={() => handleStepTransition(3)} className="accordion-toggle">
                     <span>3. {t.step3}</span>
                     <span className="toggle-chevron"></span>
@@ -909,16 +900,11 @@ export default function PublicDashboard() {
                         </div>
                       ))}
                     </div>
-
-                    <div className="step-actions mt-4">
-                      <button onClick={() => handleStepTransition(2)} className="btn-secondary">{t.backBtn}</button>
-                      <button onClick={() => handleStepTransition(4)} className="btn-primary">{t.nextStep}</button>
-                    </div>
                   </div>
                 </div>
 
                 {/* STEP 4 ACCORDION / SECTION */}
-                <div className={`accordion-section ${currentStep === 4 ? 'expanded' : 'collapsed'}`}>
+                <div ref={step4Ref} className={`accordion-section ${currentStep === 4 ? 'expanded' : 'collapsed'}`}>
                   <button onClick={() => handleStepTransition(4)} className="accordion-toggle">
                     <span>4. {t.step4}</span>
                     <span className="toggle-chevron"></span>
@@ -1022,15 +1008,12 @@ export default function PublicDashboard() {
                     <div className="timeline-line"></div>
                     
                     <div className="timeline-stages">
-                      <div className="stage-node completed">
+                      <div className={`stage-node ${getStageClass('registered')}`}>
                         <div className="node-marker checkmark-circle">✓</div>
                         <span className="node-label">{t.registeredStatus}</span>
                       </div>
 
-                      <div className={`stage-node ${
-                        searchedTicket.status === 'DEPARTMENT_ASSIGNED' ? 'active' : 
-                        searchedTicket.status === 'IN_PROGRESS' || searchedTicket.status === 'RESOLVED' ? 'completed' : ''
-                      }`}>
+                      <div className={`stage-node ${getStageClass('assigned')}`}>
                         <div className="node-marker diamond-marker">⬥</div>
                         <span className="node-label">
                           {t.assignedStatus} <br />
@@ -1038,17 +1021,25 @@ export default function PublicDashboard() {
                         </span>
                       </div>
 
-                      <div className={`stage-node ${
-                        searchedTicket.status === 'IN_PROGRESS' ? 'active' : 
-                        searchedTicket.status === 'RESOLVED' ? 'completed' : ''
-                      }`}>
+                      <div className={`stage-node ${getStageClass('in_progress')}`}>
                         <div className="node-marker circle-marker"></div>
                         <span className="node-label">{t.progressStatus}</span>
                       </div>
 
-                      <div className={`stage-node ${searchedTicket.status === 'RESOLVED' ? 'completed' : ''}`}>
+                      <div className={`stage-node ${getStageClass('resolved')}`}>
                         <div className="node-marker checkmark-circle">✓</div>
-                        <span className="node-label">{t.resolvedStatus}</span>
+                        <span className="node-label">
+                          {searchedTicket.status === 'Closed' 
+                            ? (language === 'en' ? 'RESOLVED & CLOSED' : 'समाधान एवं बंद')
+                            : t.resolvedStatus}
+                        </span>
+                      </div>
+
+                      <div className={`stage-node ${getStageClass('rejected')}`}>
+                        <div className="node-marker cross-marker">✗</div>
+                        <span className="node-label">
+                          {language === 'en' ? 'REJECTED' : 'अस्वीकृत'}
+                        </span>
                       </div>
                     </div>
                   </div>

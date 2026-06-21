@@ -95,13 +95,27 @@ export const fetchCitizenTickets = async () => {
     const res = await api.get('/tickets/citizen');
     return res.data;
 };
+export const trackTicketPublicly = async (ticketId) => {
+    const res = await api.get(`/tickets/track/${ticketId}`);
+    return res.data;
+};
 export const createTicket = async (ticketData, mediaFiles) => {
-    const formData = new FormData();
-    formData.append('title', ticketData.title);
-    formData.append('description', ticketData.description);
-    formData.append('location', ticketData.location);
-    if (mediaFiles) mediaFiles.forEach(f => formData.append('media', f));
-    const res = await api.post('/tickets/create', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+    let body;
+    if (ticketData instanceof FormData) {
+        body = ticketData;
+    } else {
+        body = new FormData();
+        body.append('title', ticketData.title || '');
+        body.append('description', ticketData.description || '');
+        body.append('location', ticketData.location || '');
+        if (ticketData.fullName) body.append('fullName', ticketData.fullName);
+        if (ticketData.phone) body.append('phone', ticketData.phone);
+        if (ticketData.email) body.append('email', ticketData.email);
+        if (mediaFiles) {
+            mediaFiles.forEach(f => body.append('media', f));
+        }
+    }
+    const res = await api.post('/tickets/create', body, { headers: { 'Content-Type': 'multipart/form-data' } });
     return res.data;
 };
 

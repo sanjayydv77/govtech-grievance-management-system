@@ -9,14 +9,14 @@ const CMLayout = () => {
   const location = useLocation();
 
   const navItems = [
-    { name: 'Executive Overview', path: '/cm/dashboard', icon: LayoutDashboard },
-    { name: 'District Analytics', path: '/cm/district-analytics', icon: MapPin },
-    { name: 'Department Performance', path: '/cm/department-performance', icon: Building2 },
-    { name: 'Critical Issues', path: '/cm/critical-issues', icon: AlertTriangle },
-    { name: 'Trends & Insights', path: '/cm/trends-insights', icon: TrendingUp },
-    { name: 'Accountability Reports', path: '/cm/accountability-reports', icon: FileSignature },
-    { name: 'Escalations', path: '/cm/escalations', icon: AlertOctagon },
-    { name: 'Settings', path: '/cm/settings', icon: Settings },
+    { name: 'Executive Overview', path: '/dashboard/cm/overview', icon: LayoutDashboard },
+    { name: 'District Analytics', path: '/dashboard/cm/district-analytics', icon: MapPin },
+    { name: 'Department Performance', path: '/dashboard/cm/department-performance', icon: Building2 },
+    { name: 'Critical Issues', path: '/dashboard/cm/critical-issues', icon: AlertTriangle },
+    { name: 'Trends & Insights', path: '/dashboard/cm/trends-insights', icon: TrendingUp },
+    { name: 'Accountability Reports', path: '/dashboard/cm/accountability-reports', icon: FileSignature },
+    { name: 'Escalations', path: '/dashboard/cm/escalations', icon: AlertOctagon },
+    { name: 'Settings', path: '/dashboard/cm/settings', icon: Settings },
   ];
 
   return (
@@ -38,7 +38,7 @@ const CMLayout = () => {
         {/* Navigation */}
         <nav className="flex-1 px-4 py-2 space-y-1.5 relative z-10 overflow-y-auto">
           {navItems.map((item) => {
-            const isActive = location.pathname.startsWith(item.path) || (item.path === '/cm/dashboard' && location.pathname === '/cm');
+            const isActive = location.pathname.startsWith(item.path);
             return (
               <Link
                 key={item.name}

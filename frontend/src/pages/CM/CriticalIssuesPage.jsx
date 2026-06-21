@@ -4,25 +4,45 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, Clock, ShieldAlert, ArrowRight } from 'lucide-react';
 import { cmService } from '../../services/cmService';
+import api from '../../services/api';
+import TicketDetailsModal from '../../components/TicketDetailsModal';
 
 const CriticalIssuesPage = () => {
   const [loading, setLoading] = useState(true);
   const [issues, setIssues] = useState([]);
+  const [selectedTicket, setSelectedTicket] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [fetchingId, setFetchingId] = useState(null);
+
+  const fetchIssues = async () => {
+    setLoading(true);
+    try {
+      const data = await cmService.getCriticalIssues();
+      setIssues(data);
+    } catch (error) {
+      console.error("Failed to load Critical Issues", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const data = await cmService.getCriticalIssues();
-        setIssues(data);
-      } catch (error) {
-        console.error("Failed to load Critical Issues", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
+    fetchIssues();
   }, []);
+
+  const handleOpenTicket = async (id) => {
+    setFetchingId(id);
+    try {
+      const res = await api.get(`/tickets/${id}`);
+      setSelectedTicket(res.data);
+      setModalOpen(true);
+    } catch (error) {
+      console.error("Failed to fetch ticket details", error);
+      alert("Failed to load ticket details");
+    } finally {
+      setFetchingId(null);
+    }
+  };
 
   if (loading) {
     return <div className="p-8 flex items-center justify-center min-h-screen text-slate-500 font-semibold">Loading Critical Issues...</div>;
@@ -125,8 +145,14 @@ const CriticalIssuesPage = () => {
                     {issue.priority === 'Critical' ? '48 Hours' : '3 Days'}
                   </TableCell>
                   <TableCell className="text-right px-6">
-                    <Button variant="outline" size="sm" className="h-8 px-3 rounded-lg border-slate-200 text-slate-700 hover:bg-slate-100 font-semibold text-xs shadow-sm" onClick={() => alert(`Opening governance details for ${issue.ticketId}`)}>
-                      View Details <ArrowRight className="w-3 h-3 ml-1" />
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="h-8 px-3 rounded-lg border-slate-200 text-slate-700 hover:bg-slate-100 font-semibold text-xs shadow-sm disabled:opacity-50" 
+                      onClick={() => handleOpenTicket(issue.id)}
+                      disabled={fetchingId === issue.id}
+                    >
+                      {fetchingId === issue.id ? 'Loading...' : 'View Details'} <ArrowRight className="w-3 h-3 ml-1" />
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -135,6 +161,20 @@ const CriticalIssuesPage = () => {
           </Table>
         </CardContent>
       </Card>
+
+      {modalOpen && selectedTicket && (
+        <TicketDetailsModal
+          ticket={selectedTicket}
+          onClose={() => {
+            setModalOpen(false);
+            setSelectedTicket(null);
+          }}
+          onTicketUpdated={(updated) => {
+            setSelectedTicket(updated);
+            fetchIssues();
+          }}
+        />
+      )}
     </div>
   );
 };

@@ -20,7 +20,9 @@ const generateTicketId = () => {
 // ─────────────────────────────────────────────────────────────────
 const createTicket = async (req, res) => {
     try {
-        const { title, description, location } = req.body;
+        console.log('createTicket req.body:', req.body);
+        console.log('createTicket req.files:', req.files);
+        const { title, description, location, fullName, phone, email } = req.body;
 
         if (!title || !description || !location) {
             return res.status(400).json({ error: 'Title, description, and location are required' });
@@ -40,6 +42,9 @@ const createTicket = async (req, res) => {
         const newTicket = new Ticket({
             ticketId: generateTicketId(),
             citizenId: req.user._id, // Populated by real auth middleware
+            citizenName: fullName || null,
+            citizenPhone: phone || null,
+            citizenEmail: email || null,
             title,
             description,
             location,
@@ -116,6 +121,13 @@ const verifyTicket = async (req, res) => {
             ticket.officerVerificationMedia.push(...officerVerificationMedia);
         }
 
+        if (req.body.remark) {
+            ticket.officerRemarks.push({
+                remark: req.body.remark,
+                statusAtTime: ticket.status
+            });
+        }
+
         await ticket.save();
         res.status(200).json({ message: 'Ticket verification completed', ticket });
     } catch (error) {
@@ -141,6 +153,13 @@ const updateProgress = async (req, res) => {
             ticket.officerProgressMedia.push(...officerProgressMedia);
         }
 
+        if (req.body.remark) {
+            ticket.officerRemarks.push({
+                remark: req.body.remark,
+                statusAtTime: 'In Progress'
+            });
+        }
+
         await ticket.save();
         res.status(200).json({ message: 'Ticket progress updated', ticket });
     } catch (error) {
@@ -161,8 +180,13 @@ const resolveTicket = async (req, res) => {
         if (!ticket) return res.status(404).json({ error: 'Ticket not found' });
 
         ticket.status = 'Resolved';
-        if (resolutionNotes) {
-            ticket.resolutionNotes = resolutionNotes;
+        const finalRemark = resolutionNotes || req.body.remark;
+        if (finalRemark) {
+            ticket.resolutionNotes = finalRemark;
+            ticket.officerRemarks.push({
+                remark: finalRemark,
+                statusAtTime: 'Resolved'
+            });
         }
 
         const officerResolutionMedia = extractMediaUrls(req.files);
@@ -310,7 +334,7 @@ const adminUpdateStatus = async (req, res) => {
         const { status } = req.body;
         const ticketId = req.params.id;
 
-        const validStatuses = ['Pending', 'Assigned', 'In Progress', 'Resolved', 'Rejected'];
+        const validStatuses = ['Pending', 'Assigned', 'In Progress', 'Resolved', 'Rejected', 'Closed'];
         if (!validStatuses.includes(status)) {
             return res.status(400).json({ error: `Invalid status. Must be one of: ${validStatuses.join(', ')}` });
         }
@@ -355,6 +379,111 @@ const dischargeOfficer = async (req, res) => {
     }
 };
 
+// ─────────────────────────────────────────────────────────────────
+// SHARED — Get single ticket details by MongoDB ID
+// ─────────────────────────────────────────────────────────────────
+const getTicketById = async (req, res) => {
+    try {
+        const ticket = await Ticket.findById(req.params.id)
+            .populate('citizenId', 'name email phone')
+            .populate('assignedOfficerId', 'name department email');
+            
+        if (!ticket) {
+            return res.status(404).json({ error: 'Ticket not found' });
+        }
+        
+        res.status(200).json(ticket);
+    } catch (error) {
+        console.error('GetTicketById Error:', error);
+        res.status(500).json({ error: 'Server error fetching ticket details' });
+    }
+};
+
+const officerUpdateStatus = async (req, res) => {
+    try {
+        const { status, remark } = req.body;
+        const ticketId = req.params.id;
+
+        const ticket = await Ticket.findById(ticketId);
+        if (!ticket) return res.status(404).json({ error: 'Ticket not found' });
+
+        const validStatuses = ['Pending', 'Assigned', 'In Progress', 'Resolved', 'Rejected', 'Closed'];
+        if (status && !validStatuses.includes(status)) {
+            return res.status(400).json({ error: `Invalid status. Must be one of: ${validStatuses.join(', ')}` });
+        }
+
+        if (status) {
+            ticket.status = status;
+            if (status === 'Resolved' || status === 'Closed') {
+                if (remark) {
+                    ticket.resolutionNotes = remark;
+                }
+            }
+            if (status === 'Assigned') {
+                ticket.verificationStatus = 'Verified Real';
+            } else if (status === 'Rejected') {
+                ticket.verificationStatus = 'Flagged False';
+            }
+        }
+
+        const uploadedMedia = extractMediaUrls(req.files);
+        if (uploadedMedia.length > 0) {
+            if (status === 'Assigned' || status === 'Rejected') {
+                ticket.officerVerificationMedia.push(...uploadedMedia);
+            } else if (status === 'Resolved' || status === 'Closed') {
+                ticket.officerResolutionMedia.push(...uploadedMedia);
+            } else {
+                ticket.officerProgressMedia.push(...uploadedMedia);
+            }
+        }
+
+        if (remark) {
+            ticket.officerRemarks.push({
+                remark,
+                statusAtTime: status || ticket.status
+            });
+        }
+
+        await ticket.save();
+        res.status(200).json({ message: 'Ticket status updated by officer', ticket });
+    } catch (error) {
+        console.error('OfficerUpdateStatus Error:', error);
+        res.status(500).json({ error: 'Server error updating ticket status' });
+    }
+};
+
+const getTicketByPublicId = async (req, res) => {
+    try {
+        const { ticketId } = req.params;
+        if (!ticketId) {
+            return res.status(400).json({ error: 'Ticket ID is required' });
+        }
+
+        // Search by ticketId case-insensitively
+        const ticket = await Ticket.findOne({ 
+            ticketId: { $regex: new RegExp(`^${ticketId}$`, 'i') } 
+        });
+
+        if (!ticket) {
+            return res.status(404).json({ error: 'Ticket not found' });
+        }
+
+        // Return only non-sensitive fields
+        res.status(200).json({
+            ticketId: ticket.ticketId,
+            title: ticket.title,
+            category: ticket.category || 'General',
+            status: ticket.status,
+            department: ticket.department || 'Nodal Cell',
+            location: ticket.location,
+            createdAt: ticket.createdAt
+        });
+    } catch (error) {
+        console.error('GetTicketByPublicId Error:', error);
+        res.status(500).json({ error: 'Server error retrieving ticket status' });
+    }
+};
+
 module.exports = {
     createTicket,
     getCitizenTickets,
@@ -368,4 +497,7 @@ module.exports = {
     getStats,
     adminUpdateStatus,
     dischargeOfficer,
+    getTicketById,
+    officerUpdateStatus,
+    getTicketByPublicId,
 };

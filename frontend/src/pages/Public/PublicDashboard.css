@@ -17,8 +17,9 @@
 
 .portal-container {
   font-family: 'Inter', sans-serif;
-  max-width: 1300px;
-  margin: 0 auto;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
   background-color: var(--bg-slate);
   min-height: 100vh;
   display: flex;
@@ -313,7 +314,7 @@
 
 .workspace-layout {
   display: grid;
-  grid-template-columns: 240px 1fr;
+  grid-template-columns: 260px 1fr;
   gap: 2rem;
   align-items: start;
 }
@@ -322,7 +323,8 @@
 
 /* Desktop Sidebar steps */
 .sidebar-steps {
-  position: relative;
+  position: sticky;
+  top: 2rem;
   z-index: 1; /* Keep above watermark */
   background-color: var(--card-bg);
   border-radius: 12px;
@@ -414,6 +416,17 @@
   padding: 2.25rem;
 }
 
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  width: 100%;
+}
+
+.col-span-2 {
+  grid-column: span 2;
+}
+
 .mobile-only-header {
   display: none;
 }
@@ -424,6 +437,7 @@
   border-radius: 8px;
   margin-bottom: 1rem;
   overflow: hidden;
+  scroll-margin-top: 2rem;
 }
 
 @media (min-width: 769px) {
@@ -914,7 +928,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 22%;
+  width: 18%;
 }
 
 .node-marker {
@@ -961,7 +975,22 @@
   font-weight: 700;
 }
 
+.stage-node.rejected .node-marker {
+  border-color: #ef4444;
+  background-color: #ef4444;
+  color: #ffffff;
+}
+
+.stage-node.rejected .node-label {
+  color: #ef4444;
+  font-weight: 700;
+}
+
 .checkmark-circle {
+  font-size: 0.85rem;
+}
+
+.cross-marker {
   font-size: 0.85rem;
 }
 

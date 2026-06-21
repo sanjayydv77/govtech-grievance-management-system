@@ -207,12 +207,12 @@ const ComplaintsManagementPage = () => {
                     {/* Actions */}
                     <TableCell className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <Link to={`/complaints/${complaint.id}`}>
+                        <Link to={`/dashboard/officer/complaints/${complaint.id}`}>
                           <Button variant="outline" size="sm" className="h-8 px-3 rounded-lg border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-900 font-semibold text-xs shadow-sm">
                             View Details
                           </Button>
                         </Link>
-                        <Link to={`/complaints/${complaint.id}`}>
+                        <Link to={`/dashboard/officer/complaints/${complaint.id}`}>
                           <Button size="sm" className="h-8 px-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-sm">
                             Update Status
                           </Button>

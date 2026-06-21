@@ -1,6 +1,4 @@
-import { MOCK_NOTIFICATIONS } from './mockData';
-
-let notifications = [...MOCK_NOTIFICATIONS];
+let notifications = [];
 
 export const notificationService = {
   getNotifications: async () => {

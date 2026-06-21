@@ -88,8 +88,138 @@ const HistoryPage = () => {
   const totalPages = Math.max(1, Math.ceil(filteredComplaints.length / itemsPerPage));
   const paginatedComplaints = filteredComplaints.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-  const handleDownloadReport = () => {
-    alert('Mock Action: Downloading PDF Report for this ticket.');
+  const handleDownloadReport = (complaint) => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      alert('Pop-up blocked! Please allow pop-ups to download reports.');
+      return;
+    }
+    
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Complaint Report - ${complaint.ticketId}</title>
+          <style>
+            body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #334155; margin: 40px; line-height: 1.6; }
+            .logo { font-size: 24px; font-weight: bold; color: #1e3a8a; }
+            .ticket-id { font-size: 18px; color: #64748b; font-weight: 600; }
+            .title { font-size: 26px; font-weight: 800; color: #0f172a; margin: 0 0 10px 0; }
+            .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px; }
+            .section { border: 1px solid #e2e8f0; padding: 20px; border-radius: 12px; background-color: #f8fafc; page-break-inside: avoid; }
+            .section-title { font-size: 13px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; margin-top: 0; margin-bottom: 12px; }
+            .label { font-size: 10px; font-weight: bold; color: #94a3b8; text-transform: uppercase; margin-bottom: 2px; }
+            .value { font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 12px; }
+            .value:last-child { margin-bottom: 0; }
+            .badge { display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+            .badge-critical { background-color: #fee2e2; color: #991b1b; }
+            .badge-high { background-color: #fef2f2; color: #b91c1c; }
+            .badge-medium { background-color: #fef3c7; color: #92400e; }
+            .badge-low { background-color: #d1fae5; color: #065f46; }
+            .badge-status { background-color: #e0f2fe; color: #0369a1; margin-left: 8px; }
+            .description { font-size: 13px; color: #475569; background: #fff; border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; margin-top: 8px; }
+            .footer { margin-top: 50px; text-align: center; font-size: 11px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 20px; }
+            table { width: 100%; border-collapse: collapse; font-size: 12px; }
+            th { border-bottom: 1px solid #cbd5e1; text-align: left; padding: 8px; color: #64748b; font-weight: 700; text-transform: uppercase; font-size: 10px; }
+            td { border-bottom: 1px solid #f1f5f9; padding: 10px 8px; color: #475569; }
+          </style>
+        </head>
+        <body>
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 25px;">
+            <div class="logo">Delhi CM Portal</div>
+            <div class="ticket-id">${complaint.ticketId}</div>
+          </div>
+          
+          <h1 class="title">${complaint.title}</h1>
+          <div style="margin-bottom: 25px;">
+            <span class="badge ${
+              complaint.priority === 'Critical' ? 'badge-critical' :
+              complaint.priority === 'High' ? 'badge-high' :
+              complaint.priority === 'Medium' ? 'badge-medium' : 'badge-low'
+            }">${complaint.priority} Priority</span>
+            <span class="badge badge-status">${complaint.status}</span>
+          </div>
+
+          <div class="grid">
+            <div class="section">
+              <h3 class="section-title">Complaint Information</h3>
+              <div class="label">Department</div>
+              <div class="value">${complaint.category || complaint.department || 'General'}</div>
+              <div class="label">Location / District</div>
+              <div class="value">${complaint.district || 'Unknown District'}</div>
+              <div class="label">Filed Date</div>
+              <div class="value">${new Date(complaint.createdAt).toLocaleString()}</div>
+              <div class="label">Closed Date</div>
+              <div class="value">${new Date(complaint.updatedAt).toLocaleString()}</div>
+            </div>
+            
+            <div class="section">
+              <h3 class="section-title">Citizen Details</h3>
+              <div class="label">Full Name</div>
+              <div class="value">${complaint.citizen?.name || 'Anonymous'}</div>
+              <div class="label">Phone Number</div>
+              <div class="value">${complaint.citizen?.phone || 'Not Provided'}</div>
+              <div class="label">Email Address</div>
+              <div class="value">${complaint.citizen?.email || 'Not Provided'}</div>
+              <div class="label">Address</div>
+              <div class="value">${complaint.citizen?.address || 'Not Provided'}</div>
+            </div>
+          </div>
+
+          <div class="section" style="margin-bottom: 25px;">
+            <h3 class="section-title">Description</h3>
+            <div class="description">${complaint.description}</div>
+          </div>
+
+          ${complaint.remarks && complaint.remarks.length > 0 ? `
+            <div class="section" style="margin-bottom: 25px;">
+              <h3 class="section-title">Timeline & Remarks History</h3>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Author</th>
+                    <th>Date</th>
+                    <th>Remark</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${complaint.remarks.map(r => `
+                    <tr>
+                      <td style="font-weight: bold; color: #334155;">${r.author}</td>
+                      <td>${new Date(r.createdAt).toLocaleString()}</td>
+                      <td>${r.remark}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          ` : ''}
+
+          ${complaint.attachments && complaint.attachments.length > 0 ? `
+            <div class="section" style="margin-bottom: 25px;">
+              <h3 class="section-title">Attached Media Proofs</h3>
+              <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-top: 10px;">
+                ${complaint.attachments.map(att => `
+                  <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px; text-align: center; background-color: #fff;">
+                    <img src="${att.url}" style="width: 100%; height: 80px; object-fit: cover; border-radius: 6px;" />
+                    <div style="font-size: 8px; font-weight: bold; color: #94a3b8; margin-top: 4px; text-transform: uppercase;">${att.uploader === 'citizen' ? 'Citizen' : 'Officer'} File</div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          ` : ''}
+
+          <div class="footer">
+            <p>This is a system generated report from the Delhi Government CM Portal. Generated on ${new Date().toLocaleString()}</p>
+          </div>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => {
+      printWindow.print();
+      printWindow.close();
+    }, 500);
   };
 
   return (
@@ -287,13 +417,13 @@ const HistoryPage = () => {
                     {/* Actions */}
                     <TableCell className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <Link to={`/complaints/${complaint.id}`}>
+                        <Link to={`/dashboard/officer/complaints/${complaint.id}`}>
                           <Button variant="outline" size="sm" className="h-8 px-3 rounded-lg border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-900 font-semibold text-xs shadow-sm">
                             <FileText className="w-3 h-3 mr-1.5" /> View Details
                           </Button>
                         </Link>
                         <Button 
-                          onClick={handleDownloadReport}
+                          onClick={() => handleDownloadReport(complaint)}
                           variant="outline" 
                           size="sm" 
                           className="h-8 px-3 rounded-lg border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-900 font-semibold text-xs shadow-sm"

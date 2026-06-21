@@ -61,9 +61,9 @@ const AllComplaints = () => {
     const loadData = useCallback(async () => {
         setLoading(true);
         try {
-            const [t, o] = await Promise.all([fetchAllTickets(), fetchOfficers()]);
-            setTickets(t);
-            setOfficers(o);
+            const [t, o] = await Promise.allSettled([fetchAllTickets(), fetchOfficers()]);
+            setTickets(t.status === 'fulfilled' ? t.value : []);
+            setOfficers(o.status === 'fulfilled' ? o.value : []);
         } catch (e) { showToast('Failed to load data', 'error'); }
         finally { setLoading(false); }
     }, []);
@@ -85,6 +85,7 @@ const AllComplaints = () => {
                 t.location?.toLowerCase().includes(q) ||
                 t.citizenId?.name?.toLowerCase().includes(q) ||
                 t.department?.toLowerCase().includes(q) ||
+                t.ticketId?.toLowerCase().includes(q) ||
                 t._id?.toLowerCase().includes(q)
             );
         }
@@ -133,10 +134,11 @@ const AllComplaints = () => {
     const handleExport = () => {
         const headers = ['Ticket ID', 'Title', 'Location', 'Department', 'Status', 'Verification Status', 'Citizen', 'Citizen Phone', 'Officer', 'Officer Dept', 'Filed On'];
         const rows = filteredTickets.map(t => [
-            t._id, `"${(t.title || '').replace(/"/g, '""')}"`,
+            t.ticketId || t._id, `"${(t.title || '').replace(/"/g, '""')}"`,
             `"${(t.location || '').replace(/"/g, '""')}"`,
             t.department || '', t.status, t.verificationStatus,
-            t.citizenId?.name || 'Anonymous', t.citizenId?.phone || '',
+            t.citizenName || t.citizenId?.name || 'Anonymous', 
+            t.citizenPhone || t.citizenId?.phone || '',
             t.assignedOfficerId?.name || 'Unassigned', t.assignedOfficerId?.department || '',
             new Date(t.createdAt).toLocaleDateString('en-IN'),
         ]);
@@ -252,8 +254,8 @@ const AllComplaints = () => {
                                         {/* Complaint Info */}
                                         <td className="px-5 py-4 max-w-[220px]">
                                             <p className="font-bold text-slate-800 truncate text-sm">{ticket.title}</p>
-                                            <p className="text-xs text-slate-500 mt-0.5 truncate">{ticket.citizenId?.name || 'Anonymous'}</p>
-                                            <p className="text-xs text-slate-300 mt-0.5 font-mono">#{ticket._id.slice(-8).toUpperCase()}</p>
+                                            <p className="text-xs text-slate-500 mt-0.5 truncate">{ticket.citizenName || ticket.citizenId?.name || 'Anonymous'}</p>
+                                            <p className="text-xs text-slate-400 mt-0.5 font-mono">{ticket.ticketId}</p>
                                         </td>
                                         {/* Location */}
                                         <td className="px-5 py-4 max-w-[160px]">

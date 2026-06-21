@@ -274,7 +274,7 @@ const NotificationsPage = () => {
                         <p className="text-xs font-bold text-blue-800 uppercase tracking-wider mb-1">Related Ticket</p>
                         <p className="text-base font-black text-blue-900">ID: {selectedNotif.complaintId}</p>
                       </div>
-                      <Link to={`/complaints/${selectedNotif.complaintId}`}>
+                      <Link to={`/dashboard/officer/complaints/${selectedNotif.complaintId}`}>
                         <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-sm">
                           Go to Ticket <ChevronRight className="w-4 h-4 ml-1" />
                         </Button>

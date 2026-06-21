@@ -14,3 +14,24 @@
 .animate-fadeIn {
   animation: fadeIn 0.2s ease-out forwards;
 }
+
+/* Custom Leaflet Tooltip styling overrides */
+.leaflet-tooltip.custom-geojson-tooltip {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+.leaflet-tooltip-top.custom-geojson-tooltip::before {
+  border-top-color: transparent !important;
+}
+.leaflet-tooltip-bottom.custom-geojson-tooltip::before {
+  border-bottom-color: transparent !important;
+}
+.leaflet-tooltip-left.custom-geojson-tooltip::before {
+  border-left-color: transparent !important;
+}
+.leaflet-tooltip-right.custom-geojson-tooltip::before {
+  border-right-color: transparent !important;
+}
+

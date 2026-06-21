@@ -4,33 +4,51 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button';
 import { AlertOctagon, Mail, BellRing } from 'lucide-react';
 import { cmService } from '../../services/cmService';
+import api from '../../services/api';
+import TicketDetailsModal from '../../components/TicketDetailsModal';
 
 const EscalationsPage = () => {
   const [loading, setLoading] = useState(true);
   const [escalations, setEscalations] = useState([]);
+  const [selectedTicket, setSelectedTicket] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [fetchingId, setFetchingId] = useState(null);
+
+  const fetchEscalations = async () => {
+    setLoading(true);
+    try {
+      const data = await cmService.getEscalations();
+      setEscalations(data);
+    } catch (error) {
+      console.error("Failed to load Escalations", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const data = await cmService.getEscalations();
-        setEscalations(data);
-      } catch (error) {
-        console.error("Failed to load Escalations", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
+    fetchEscalations();
   }, []);
+
+  const handleOpenTicket = async (id) => {
+    setFetchingId(id);
+    try {
+      const res = await api.get(`/tickets/${id}`);
+      setSelectedTicket(res.data);
+      setModalOpen(true);
+    } catch (error) {
+      console.error("Failed to fetch ticket details", error);
+      alert("Failed to load ticket details");
+    } finally {
+      setFetchingId(null);
+    }
+  };
 
   if (loading) {
     return <div className="p-8 flex items-center justify-center min-h-screen text-slate-500 font-semibold">Loading Escalation Logs...</div>;
   }
 
-  const handleIntervene = (ticketId) => {
-    alert(`Initiating CM Office direct intervention for ${ticketId}. Notifications sent to Head of Department.`);
-  };
+  // Removed handleIntervene alert
 
   return (
     <div className="p-8 space-y-6">
@@ -122,8 +140,14 @@ const EscalationsPage = () => {
                     </span>
                   </TableCell>
                   <TableCell className="text-right px-6">
-                    <Button variant="outline" size="sm" className="h-8 px-3 rounded-lg border-purple-200 text-purple-700 bg-purple-50 hover:bg-purple-100 font-bold text-xs shadow-sm" onClick={() => handleIntervene(esc.ticketId)}>
-                      Intervene
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="h-8 px-3 rounded-lg border-purple-200 text-purple-700 bg-purple-50 hover:bg-purple-100 font-bold text-xs shadow-sm disabled:opacity-50" 
+                      onClick={() => handleOpenTicket(esc.id)}
+                      disabled={fetchingId === esc.id}
+                    >
+                      {fetchingId === esc.id ? 'Loading...' : 'Intervene'}
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -132,6 +156,20 @@ const EscalationsPage = () => {
           </Table>
         </CardContent>
       </Card>
+
+      {modalOpen && selectedTicket && (
+        <TicketDetailsModal
+          ticket={selectedTicket}
+          onClose={() => {
+            setModalOpen(false);
+            setSelectedTicket(null);
+          }}
+          onTicketUpdated={(updated) => {
+            setSelectedTicket(updated);
+            fetchEscalations();
+          }}
+        />
+      )}
     </div>
   );
 };
