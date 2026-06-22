@@ -5,6 +5,9 @@ const getApiUrl = () => {
     if (origin.includes('5173')) {
         return origin.replace('5173', '5000') + '/api';
     }
+    if (origin.includes('frontend')) {
+        return origin.replace('frontend', 'backend') + '/api';
+    }
     return 'http://localhost:5000/api';
 };
 
