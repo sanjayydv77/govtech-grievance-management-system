@@ -259,6 +259,7 @@ const AuthPage = () => {
               required
               value={formData.email}
               onChange={handleChange}
+              autoComplete="off"
               className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -272,6 +273,7 @@ const AuthPage = () => {
               required
               value={formData.password}
               onChange={handleChange}
+              autoComplete="new-password"
               className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
