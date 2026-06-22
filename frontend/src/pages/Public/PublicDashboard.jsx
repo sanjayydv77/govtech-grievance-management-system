@@ -353,6 +353,23 @@ export default function PublicDashboard() {
   };
 
   const handleStepTransition = (nextStep) => {
+    // If going forward, validate preceding steps
+    if (nextStep > currentStep) {
+      for (let step = 1; step < nextStep; step++) {
+        if (!validateStep(step)) {
+          // Scroll to the first invalid step
+          const refs = { 1: step1Ref, 2: step2Ref, 3: step3Ref, 4: step4Ref };
+          const targetRef = refs[step];
+          if (targetRef && targetRef.current) {
+            setTimeout(() => {
+              targetRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 50);
+          }
+          return;
+        }
+      }
+    }
+
     setCurrentStep(nextStep);
     const refs = {
       1: step1Ref,
