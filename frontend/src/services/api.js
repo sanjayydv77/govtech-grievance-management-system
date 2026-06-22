@@ -1,6 +1,14 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api';
+const getApiUrl = () => {
+    const origin = window.location.origin;
+    if (origin.includes('5173')) {
+        return origin.replace('5173', '5000') + '/api';
+    }
+    return 'http://localhost:5000/api';
+};
+
+const API_URL = getApiUrl();
 
 const api = axios.create({ baseURL: API_URL });
 
